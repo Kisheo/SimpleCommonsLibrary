@@ -5,15 +5,17 @@ import android.text.Html
 import android.text.method.LinkMovementMethod
 import android.view.LayoutInflater
 import com.dpsoftapps.commons.R
+import com.dpsoftapps.commons.databinding.ActivityContributorsBinding
+import com.dpsoftapps.commons.databinding.ItemLanguageContributorBinding
 import com.dpsoftapps.commons.extensions.*
 import com.dpsoftapps.commons.helpers.APP_ICON_IDS
 import com.dpsoftapps.commons.helpers.APP_LAUNCHER_NAME
 import com.dpsoftapps.commons.helpers.NavigationIcon
 import com.dpsoftapps.commons.models.LanguageContributor
-import kotlinx.android.synthetic.main.activity_contributors.*
-import kotlinx.android.synthetic.main.item_language_contributor.view.*
 
 class ContributorsActivity : BaseSimpleActivity() {
+    private lateinit var binding: ActivityContributorsBinding
+
     override fun getAppIconIDs() = intent.getIntegerArrayListExtra(APP_ICON_IDS) ?: ArrayList()
 
     override fun getAppLauncherName() = intent.getStringExtra(APP_LAUNCHER_NAME) ?: ""
@@ -21,15 +23,16 @@ class ContributorsActivity : BaseSimpleActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         isMaterialActivity = true
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_contributors)
-        updateTextColors(contributors_holder)
+        binding = ActivityContributorsBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        updateTextColors(binding.contributorsHolder)
 
-        updateMaterialActivityViews(contributors_coordinator, contributors_holder, useTransparentNavigation = true, useTopSearchMenu = false)
-        setupMaterialScrollListener(contributors_nested_scrollview, contributors_toolbar)
+        updateMaterialActivityViews(binding.contributorsCoordinator, binding.contributorsHolder, useTransparentNavigation = true, useTopSearchMenu = false)
+        setupMaterialScrollListener(binding.contributorsNestedScrollview, binding.contributorsToolbar)
 
         val primaryColor = getProperPrimaryColor()
-        contributors_development_label.setTextColor(primaryColor)
-        contributors_translation_label.setTextColor(primaryColor)
+        binding.contributorsDevelopmentLabel.setTextColor(primaryColor)
+        binding.contributorsTranslationLabel.setTextColor(primaryColor)
 
         val inflater = LayoutInflater.from(this)
         val languages = arrayListOf<LanguageContributor>()
@@ -80,23 +83,22 @@ class ContributorsActivity : BaseSimpleActivity() {
 
         val textColor = getProperTextColor()
         languages.forEach { language ->
-            inflater.inflate(R.layout.item_language_contributor, null).apply {
-                language_icon.setImageDrawable(getDrawable(language.iconId))
-                language_label.apply {
-                    text = getString(language.labelId)
-                    setTextColor(textColor)
-                }
-
-                language_contributors.apply {
-                    text = getString(language.contributorsId)
-                    setTextColor(textColor)
-                }
-
-                contributors_languages_holder.addView(this)
+            val itemBinding = ItemLanguageContributorBinding.inflate(inflater, null, false)
+            itemBinding.languageIcon.setImageDrawable(getDrawable(language.iconId))
+            itemBinding.languageLabel.apply {
+                text = getString(language.labelId)
+                setTextColor(textColor)
             }
+
+            itemBinding.languageContributors.apply {
+                text = getString(language.contributorsId)
+                setTextColor(textColor)
+            }
+
+            binding.contributorsLanguagesHolder.addView(itemBinding.root)
         }
 
-        contributors_label.apply {
+        binding.contributorsLabel.apply {
             setTextColor(textColor)
             text = Html.fromHtml(getString(R.string.contributors_label))
             setLinkTextColor(primaryColor)
@@ -104,16 +106,16 @@ class ContributorsActivity : BaseSimpleActivity() {
             removeUnderlines()
         }
 
-        contributors_development_icon.applyColorFilter(textColor)
-        contributors_footer_icon.applyColorFilter(textColor)
+        binding.contributorsDevelopmentIcon.applyColorFilter(textColor)
+        binding.contributorsFooterIcon.applyColorFilter(textColor)
 
         if (resources.getBoolean(R.bool.hide_all_external_links)) {
-            contributors_footer_layout.beGone()
+            binding.contributorsFooterLayout.beGone()
         }
     }
 
     override fun onResume() {
         super.onResume()
-        setupToolbar(contributors_toolbar, NavigationIcon.Arrow)
+        setupToolbar(binding.contributorsToolbar, NavigationIcon.Arrow)
     }
 }

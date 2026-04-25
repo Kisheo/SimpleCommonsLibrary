@@ -6,7 +6,6 @@ import android.net.Uri
 import android.os.Environment
 import android.provider.MediaStore
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -14,11 +13,11 @@ import androidx.appcompat.app.AlertDialog
 import androidx.exifinterface.media.ExifInterface
 import com.dpsoftapps.commons.R
 import com.dpsoftapps.commons.activities.BaseSimpleActivity
+import com.dpsoftapps.commons.databinding.DialogPropertiesBinding
+import com.dpsoftapps.commons.databinding.ItemPropertyBinding
 import com.dpsoftapps.commons.extensions.*
 import com.dpsoftapps.commons.helpers.*
 import com.dpsoftapps.commons.models.FileDirItem
-import kotlinx.android.synthetic.main.dialog_properties.view.*
-import kotlinx.android.synthetic.main.item_property.view.*
 import java.io.File
 import java.util.*
 
@@ -27,7 +26,7 @@ class PropertiesDialog() {
     private lateinit var mPropertyView: ViewGroup
     private lateinit var mResources: Resources
     private lateinit var mActivity: Activity
-    private lateinit var mDialogView: View
+    private lateinit var mDialogBinding: DialogPropertiesBinding
     private var mCountHiddenItems = false
 
     /**
@@ -46,9 +45,9 @@ class PropertiesDialog() {
         mActivity = activity
         mInflater = LayoutInflater.from(activity)
         mResources = activity.resources
-        mDialogView = mInflater.inflate(R.layout.dialog_properties, null)
+        mDialogBinding = DialogPropertiesBinding.inflate(mInflater)
         mCountHiddenItems = countHiddenItems
-        mPropertyView = mDialogView.properties_holder!!
+        mPropertyView = mDialogBinding.propertiesHolder!!
         addProperties(path)
 
         val builder = activity.getAlertDialogBuilder()
@@ -61,7 +60,7 @@ class PropertiesDialog() {
         }
 
         builder.apply {
-            mActivity.setupDialogStuff(mDialogView, this, R.string.properties) { alertDialog ->
+            mActivity.setupDialogStuff(mDialogBinding.root, this, R.string.properties) { alertDialog ->
                 alertDialog.getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener {
                     removeEXIFFromPath(path)
                 }
@@ -86,11 +85,11 @@ class PropertiesDialog() {
             }
 
             this.mActivity.runOnUiThread {
-                (mDialogView.findViewById<LinearLayout>(R.id.properties_size).property_value as TextView).text = size
+                ItemPropertyBinding.bind(mDialogBinding.root.findViewById(R.id.properties_size)).propertyValue.text = size
 
                 if (fileDirItem.isDirectory) {
-                    (mDialogView.findViewById<LinearLayout>(R.id.properties_file_count).property_value as TextView).text = fileCount.toString()
-                    (mDialogView.findViewById<LinearLayout>(R.id.properties_direct_children_count).property_value as TextView).text =
+                    ItemPropertyBinding.bind(mDialogBinding.root.findViewById(R.id.properties_file_count)).propertyValue.text = fileCount.toString()
+                    ItemPropertyBinding.bind(mDialogBinding.root.findViewById(R.id.properties_direct_children_count)).propertyValue.text =
                         directChildrenCount.toString()
                 }
             }
@@ -104,9 +103,9 @@ class PropertiesDialog() {
                 cursor?.use {
                     if (cursor.moveToFirst()) {
                         val dateModified = cursor.getLongValue(MediaStore.Images.Media.DATE_MODIFIED) * 1000L
-                        updateLastModified(mActivity, mDialogView, dateModified)
+                        updateLastModified(mActivity, dateModified)
                     } else {
-                        updateLastModified(mActivity, mDialogView, fileDirItem.getLastModified(mActivity))
+                        updateLastModified(mActivity, fileDirItem.getLastModified(mActivity))
                     }
                 }
 
@@ -192,9 +191,9 @@ class PropertiesDialog() {
 
                     mActivity.runOnUiThread {
                         if (md5 != null) {
-                            (mDialogView.findViewById<LinearLayout>(R.id.properties_md5).property_value as TextView).text = md5
+                            ItemPropertyBinding.bind(mDialogBinding.root.findViewById(R.id.properties_md5)).propertyValue.text = md5
                         } else {
-                            mDialogView.findViewById<LinearLayout>(R.id.properties_md5).beGone()
+                            mDialogBinding.root.findViewById<LinearLayout>(R.id.properties_md5).beGone()
                         }
                     }
                 }
@@ -202,9 +201,9 @@ class PropertiesDialog() {
         }
     }
 
-    private fun updateLastModified(activity: Activity, view: View, timestamp: Long) {
+    private fun updateLastModified(activity: Activity, timestamp: Long) {
         activity.runOnUiThread {
-            (view.findViewById<LinearLayout>(R.id.properties_last_modified).property_value as TextView).text = timestamp.formatDate(activity)
+            ItemPropertyBinding.bind(mDialogBinding.root.findViewById(R.id.properties_last_modified)).propertyValue.text = timestamp.formatDate(activity)
         }
     }
 
@@ -219,9 +218,9 @@ class PropertiesDialog() {
         mActivity = activity
         mInflater = LayoutInflater.from(activity)
         mResources = activity.resources
-        mDialogView = mInflater.inflate(R.layout.dialog_properties, null)
+        mDialogBinding = DialogPropertiesBinding.inflate(mInflater)
         mCountHiddenItems = countHiddenItems
-        mPropertyView = mDialogView.properties_holder
+        mPropertyView = mDialogBinding.propertiesHolder
 
         val fileDirItems = ArrayList<FileDirItem>(paths.size)
         paths.forEach {
@@ -243,8 +242,8 @@ class PropertiesDialog() {
             val fileCount = fileDirItems.sumByInt { it.getProperFileCount(activity, countHiddenItems) }
             val size = fileDirItems.sumByLong { it.getProperSize(activity, countHiddenItems) }.formatSize()
             activity.runOnUiThread {
-                (mDialogView.findViewById<LinearLayout>(R.id.properties_size).property_value as TextView).text = size
-                (mDialogView.findViewById<LinearLayout>(R.id.properties_file_count).property_value as TextView).text = fileCount.toString()
+                ItemPropertyBinding.bind(mDialogBinding.root.findViewById(R.id.properties_size)).propertyValue.text = size
+                ItemPropertyBinding.bind(mDialogBinding.root.findViewById(R.id.properties_file_count)).propertyValue.text = fileCount.toString()
             }
         }
 
@@ -258,7 +257,7 @@ class PropertiesDialog() {
         }
 
         builder.apply {
-            mActivity.setupDialogStuff(mDialogView, this, R.string.properties) { alertDialog ->
+            mActivity.setupDialogStuff(mDialogBinding.root, this, R.string.properties) { alertDialog ->
                 alertDialog.getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener {
                     removeEXIFFromPaths(paths)
                 }
@@ -307,7 +306,7 @@ class PropertiesDialog() {
                 ExifInterface(path).removeValues()
                 mActivity.toast(R.string.exif_removed)
 
-                mPropertyView.properties_holder.removeAllViews()
+                mPropertyView.removeAllViews()
                 addProperties(path)
             } catch (e: Exception) {
                 mActivity.showErrorToast(e)
@@ -346,28 +345,27 @@ class PropertiesDialog() {
             return
         }
 
-        mInflater.inflate(R.layout.item_property, mPropertyView, false).apply {
-            property_value.setTextColor(mActivity.getProperTextColor())
-            property_label.setTextColor(mActivity.getProperTextColor())
+        val itemBinding = ItemPropertyBinding.inflate(mInflater, mPropertyView, false)
+        itemBinding.propertyValue.setTextColor(mActivity.getProperTextColor())
+        itemBinding.propertyLabel.setTextColor(mActivity.getProperTextColor())
 
-            property_label.text = mResources.getString(labelId)
-            property_value.text = value
-            mPropertyView.properties_holder.addView(this)
+        itemBinding.propertyLabel.text = mResources.getString(labelId)
+        itemBinding.propertyValue.text = value
+        mPropertyView.addView(itemBinding.root)
 
-            setOnLongClickListener {
-                mActivity.copyToClipboard(property_value.value)
-                true
+        itemBinding.root.setOnLongClickListener {
+            mActivity.copyToClipboard(itemBinding.propertyValue.value)
+            true
+        }
+
+        if (labelId == R.string.gps_coordinates) {
+            itemBinding.root.setOnClickListener {
+                mActivity.showLocationOnMap(value)
             }
+        }
 
-            if (labelId == R.string.gps_coordinates) {
-                setOnClickListener {
-                    mActivity.showLocationOnMap(value)
-                }
-            }
-
-            if (viewId != 0) {
-                id = viewId
-            }
+        if (viewId != 0) {
+            itemBinding.root.id = viewId
         }
     }
 }

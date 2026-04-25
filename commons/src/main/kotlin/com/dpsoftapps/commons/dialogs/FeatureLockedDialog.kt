@@ -3,28 +3,27 @@ package com.dpsoftapps.commons.dialogs
 import android.app.Activity
 import android.text.Html
 import android.text.method.LinkMovementMethod
-import android.view.View
 import androidx.appcompat.app.AlertDialog
 import com.dpsoftapps.commons.R
+import com.dpsoftapps.commons.databinding.DialogFeatureLockedBinding
 import com.dpsoftapps.commons.extensions.*
-import kotlinx.android.synthetic.main.dialog_feature_locked.view.*
 
 class FeatureLockedDialog(val activity: Activity, val callback: () -> Unit) {
     private var dialog: AlertDialog? = null
 
     init {
-        val view: View = activity.layoutInflater.inflate(R.layout.dialog_feature_locked, null)
-        view.feature_locked_image.applyColorFilter(activity.getProperTextColor())
+        val binding = DialogFeatureLockedBinding.inflate(activity.layoutInflater)
+        binding.featureLockedImage.applyColorFilter(activity.getProperTextColor())
 
         activity.getAlertDialogBuilder()
             .setPositiveButton(R.string.purchase, null)
             .setNegativeButton(R.string.later) { dialog, which -> dismissDialog() }
             .setOnDismissListener { dismissDialog() }
             .apply {
-                activity.setupDialogStuff(view, this, cancelOnTouchOutside = false) { alertDialog ->
+                activity.setupDialogStuff(binding.root, this, cancelOnTouchOutside = false) { alertDialog ->
                     dialog = alertDialog
-                    view.feature_locked_description.text = Html.fromHtml(activity.getString(R.string.features_locked))
-                    view.feature_locked_description.movementMethod = LinkMovementMethod.getInstance()
+                    binding.featureLockedDescription.text = Html.fromHtml(activity.getString(R.string.features_locked))
+                    binding.featureLockedDescription.movementMethod = LinkMovementMethod.getInstance()
 
                     alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
                         activity.launchPurchaseThankYouIntent()

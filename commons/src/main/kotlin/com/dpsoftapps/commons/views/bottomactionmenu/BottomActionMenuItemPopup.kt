@@ -12,10 +12,10 @@ import android.widget.PopupWindow
 import androidx.core.content.ContextCompat
 import androidx.core.widget.PopupWindowCompat
 import com.dpsoftapps.commons.R
+import com.dpsoftapps.commons.databinding.ItemActionModePopupBinding
 import com.dpsoftapps.commons.extensions.applyColorFilter
 import com.dpsoftapps.commons.extensions.windowManager
 import com.dpsoftapps.commons.helpers.isRPlus
-import kotlinx.android.synthetic.main.item_action_mode_popup.view.cab_item
 
 class BottomActionMenuItemPopup(
     private val context: Context,
@@ -38,25 +38,26 @@ class BottomActionMenuItemPopup(
 
     private val popupListAdapter = object : ArrayAdapter<BottomActionMenuItem>(context, R.layout.item_action_mode_popup, items) {
         override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
-            var view = convertView
-            if (view == null) {
-                view = LayoutInflater.from(context).inflate(R.layout.item_action_mode_popup, parent, false)
+            val binding = if (convertView == null) {
+                ItemActionModePopupBinding.inflate(LayoutInflater.from(context), parent, false)
+            } else {
+                ItemActionModePopupBinding.bind(convertView)
             }
 
             val item = items[position]
-            view!!.cab_item.text = item.title
+            binding.cabItem.text = item.title
             if (item.icon != View.NO_ID) {
                 val icon = ContextCompat.getDrawable(context, item.icon)
                 icon?.applyColorFilter(Color.WHITE)
-                view.cab_item.setCompoundDrawablesWithIntrinsicBounds(icon, null, null, null)
+                binding.cabItem.setCompoundDrawablesWithIntrinsicBounds(icon, null, null, null)
             }
 
-            view.setOnClickListener {
+            binding.root.setOnClickListener {
                 onSelect.invoke(item)
                 popup.dismiss()
             }
 
-            return view
+            return binding.root
         }
     }
 

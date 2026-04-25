@@ -3,20 +3,20 @@ package com.dpsoftapps.commons.dialogs
 import android.app.Activity
 import android.view.LayoutInflater
 import com.dpsoftapps.commons.R
+import com.dpsoftapps.commons.databinding.DialogWhatsNewBinding
 import com.dpsoftapps.commons.extensions.getAlertDialogBuilder
 import com.dpsoftapps.commons.extensions.setupDialogStuff
 import com.dpsoftapps.commons.models.Release
-import kotlinx.android.synthetic.main.dialog_whats_new.view.*
 
 class WhatsNewDialog(val activity: Activity, val releases: List<Release>) {
     init {
-        val view = LayoutInflater.from(activity).inflate(R.layout.dialog_whats_new, null)
-        view.whats_new_content.text = getNewReleases()
+        val binding = DialogWhatsNewBinding.inflate(LayoutInflater.from(activity))
+        binding.whatsNewContent.text = getNewReleases()
 
         activity.getAlertDialogBuilder()
             .setPositiveButton(R.string.ok, null)
             .apply {
-                activity.setupDialogStuff(view, this, R.string.whats_new, cancelOnTouchOutside = false)
+                activity.setupDialogStuff(binding.root, this, R.string.whats_new, cancelOnTouchOutside = false)
             }
     }
 

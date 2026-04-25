@@ -7,11 +7,11 @@ import android.widget.RadioButton
 import android.widget.RadioGroup
 import androidx.appcompat.app.AlertDialog
 import com.dpsoftapps.commons.R
+import com.dpsoftapps.commons.databinding.DialogRadioGroupBinding
 import com.dpsoftapps.commons.extensions.getAlertDialogBuilder
 import com.dpsoftapps.commons.extensions.onGlobalLayout
 import com.dpsoftapps.commons.extensions.setupDialogStuff
 import com.dpsoftapps.commons.models.RadioItem
-import kotlinx.android.synthetic.main.dialog_radio_group.view.*
 
 class RadioGroupDialog(
     val activity: Activity, val items: ArrayList<RadioItem>, val checkedItemId: Int = -1, val titleId: Int = 0,
@@ -22,8 +22,8 @@ class RadioGroupDialog(
     private var selectedItemId = -1
 
     init {
-        val view = activity.layoutInflater.inflate(R.layout.dialog_radio_group, null)
-        view.dialog_radio_group.apply {
+        val binding = DialogRadioGroupBinding.inflate(activity.layoutInflater)
+        binding.dialogRadioGroup.apply {
             for (i in 0 until items.size) {
                 val radioButton = (activity.layoutInflater.inflate(R.layout.radio_button, null) as RadioButton).apply {
                     text = items[i].title
@@ -48,15 +48,15 @@ class RadioGroupDialog(
         }
 
         builder.apply {
-            activity.setupDialogStuff(view, this, titleId) { alertDialog ->
+            activity.setupDialogStuff(binding.root, this, titleId) { alertDialog ->
                 dialog = alertDialog
             }
         }
 
         if (selectedItemId != -1) {
-            view.dialog_radio_holder.apply {
+            binding.dialogRadioHolder.apply {
                 onGlobalLayout {
-                    scrollY = view.dialog_radio_group.findViewById<View>(selectedItemId).bottom - height
+                    scrollY = binding.dialogRadioGroup.findViewById<View>(selectedItemId).bottom - height
                 }
             }
         }

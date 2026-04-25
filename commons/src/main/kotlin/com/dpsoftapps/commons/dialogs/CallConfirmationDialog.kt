@@ -3,23 +3,23 @@ package com.dpsoftapps.commons.dialogs
 import android.view.animation.AnimationUtils
 import com.dpsoftapps.commons.R
 import com.dpsoftapps.commons.activities.BaseSimpleActivity
+import com.dpsoftapps.commons.databinding.DialogCallConfirmationBinding
 import com.dpsoftapps.commons.extensions.applyColorFilter
 import com.dpsoftapps.commons.extensions.getAlertDialogBuilder
 import com.dpsoftapps.commons.extensions.getProperTextColor
 import com.dpsoftapps.commons.extensions.setupDialogStuff
-import kotlinx.android.synthetic.main.dialog_call_confirmation.view.*
 
 class CallConfirmationDialog(val activity: BaseSimpleActivity, val callee: String, private val callback: () -> Unit) {
-    private var view = activity.layoutInflater.inflate(R.layout.dialog_call_confirmation, null)
+    private val binding = DialogCallConfirmationBinding.inflate(activity.layoutInflater)
 
     init {
-        view.call_confirm_phone.applyColorFilter(activity.getProperTextColor())
+        binding.callConfirmPhone.applyColorFilter(activity.getProperTextColor())
         activity.getAlertDialogBuilder()
             .setNegativeButton(R.string.cancel, null)
             .apply {
                 val title = String.format(activity.getString(R.string.confirm_calling_person), callee)
-                activity.setupDialogStuff(view, this, titleText = title) { alertDialog ->
-                    view.call_confirm_phone.apply {
+                activity.setupDialogStuff(binding.root, this, titleText = title) { alertDialog ->
+                    binding.callConfirmPhone.apply {
                         startAnimation(AnimationUtils.loadAnimation(activity, R.anim.shake_pulse_animation))
                         setOnClickListener {
                             callback.invoke()

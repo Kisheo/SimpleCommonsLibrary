@@ -25,7 +25,6 @@ import android.view.Window
 import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
-import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.biometric.BiometricPrompt
@@ -40,10 +39,10 @@ import com.dpsoftapps.commons.R
 import com.dpsoftapps.commons.activities.BaseSimpleActivity
 import com.dpsoftapps.commons.dialogs.*
 import com.dpsoftapps.commons.dialogs.WritePermissionDialog.Mode
+import com.dpsoftapps.commons.databinding.DialogTitleBinding
 import com.dpsoftapps.commons.helpers.*
 import com.dpsoftapps.commons.models.*
 import com.dpsoftapps.commons.views.MyTextView
-import kotlinx.android.synthetic.main.dialog_title.view.*
 import java.io.*
 import java.util.*
 
@@ -1526,10 +1525,10 @@ fun Activity.setupDialogStuff(
             callback?.invoke(this)
         }
     } else {
-        var title: TextView? = null
+        var title: View? = null
         if (titleId != 0 || titleText.isNotEmpty()) {
-            title = layoutInflater.inflate(R.layout.dialog_title, null) as TextView
-            title.dialog_title_textview.apply {
+            val titleBinding = DialogTitleBinding.inflate(layoutInflater, null, false)
+            titleBinding.dialogTitleTextview.apply {
                 if (titleText.isNotEmpty()) {
                     text = titleText
                 } else {
@@ -1537,6 +1536,7 @@ fun Activity.setupDialogStuff(
                 }
                 setTextColor(textColor)
             }
+            title = titleBinding.root
         }
 
         // if we use the same primary and background color, use the text color for dialog confirmation buttons

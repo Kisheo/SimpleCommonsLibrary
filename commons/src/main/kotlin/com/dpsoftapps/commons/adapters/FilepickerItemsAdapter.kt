@@ -15,11 +15,11 @@ import com.bumptech.glide.request.RequestOptions
 import com.qtalk.recyclerviewfastscroller.RecyclerViewFastScroller
 import com.dpsoftapps.commons.R
 import com.dpsoftapps.commons.activities.BaseSimpleActivity
+import com.dpsoftapps.commons.databinding.ItemFilepickerListBinding
 import com.dpsoftapps.commons.extensions.*
 import com.dpsoftapps.commons.helpers.getFilePlaceholderDrawables
 import com.dpsoftapps.commons.models.FileDirItem
 import com.dpsoftapps.commons.views.MyRecyclerView
-import kotlinx.android.synthetic.main.item_filepicker_list.view.*
 import java.util.*
 
 class FilepickerItemsAdapter(
@@ -74,24 +74,25 @@ class FilepickerItemsAdapter(
     override fun onViewRecycled(holder: ViewHolder) {
         super.onViewRecycled(holder)
         if (!activity.isDestroyed && !activity.isFinishing) {
-            Glide.with(activity).clear(holder.itemView.list_item_icon!!)
+            Glide.with(activity).clear(ItemFilepickerListBinding.bind(holder.itemView).listItemIcon)
         }
     }
 
     private fun setupView(view: View, fileDirItem: FileDirItem) {
-        view.apply {
-            list_item_name.text = fileDirItem.name
-            list_item_name.setTextColor(textColor)
-            list_item_name.setTextSize(TypedValue.COMPLEX_UNIT_PX, fontSize)
+        val binding = ItemFilepickerListBinding.bind(view)
+        binding.apply {
+            listItemName.text = fileDirItem.name
+            listItemName.setTextColor(textColor)
+            listItemName.setTextSize(TypedValue.COMPLEX_UNIT_PX, fontSize)
 
-            list_item_details.setTextColor(textColor)
-            list_item_details.setTextSize(TypedValue.COMPLEX_UNIT_PX, fontSize)
+            listItemDetails.setTextColor(textColor)
+            listItemDetails.setTextSize(TypedValue.COMPLEX_UNIT_PX, fontSize)
 
             if (fileDirItem.isDirectory) {
-                list_item_icon.setImageDrawable(folderDrawable)
-                list_item_details.text = getChildrenCnt(fileDirItem)
+                listItemIcon.setImageDrawable(folderDrawable)
+                listItemDetails.text = getChildrenCnt(fileDirItem)
             } else {
-                list_item_details.text = fileDirItem.size.formatSize()
+                listItemDetails.text = fileDirItem.size.formatSize()
                 val path = fileDirItem.path
                 val placeholder = fileDrawables.getOrElse(fileDirItem.name.substringAfterLast(".").toLowerCase(Locale.getDefault()), { fileDrawable })
                 val options = RequestOptions()
@@ -101,12 +102,12 @@ class FilepickerItemsAdapter(
                     .error(placeholder)
 
                 var itemToLoad = if (fileDirItem.name.endsWith(".apk", true)) {
-                    val packageInfo = context.packageManager.getPackageArchiveInfo(path, PackageManager.GET_ACTIVITIES)
+                    val packageInfo = root.context.packageManager.getPackageArchiveInfo(path, PackageManager.GET_ACTIVITIES)
                     if (packageInfo != null) {
                         val appInfo = packageInfo.applicationInfo
                         appInfo.sourceDir = path
                         appInfo.publicSourceDir = path
-                        appInfo.loadIcon(context.packageManager)
+                        appInfo.loadIcon(root.context.packageManager)
                     } else {
                         path
                     }
@@ -122,14 +123,14 @@ class FilepickerItemsAdapter(
                     }
 
                     if (itemToLoad.toString().isGif()) {
-                        Glide.with(activity).asBitmap().load(itemToLoad).apply(options).into(list_item_icon)
+                        Glide.with(activity).asBitmap().load(itemToLoad).apply(options).into(listItemIcon)
                     } else {
                         Glide.with(activity)
                             .load(itemToLoad)
                             .transition(withCrossFade())
                             .apply(options)
                             .transform(CenterCrop(), RoundedCorners(cornerRadius))
-                            .into(list_item_icon)
+                            .into(listItemIcon)
                     }
                 }
             }
