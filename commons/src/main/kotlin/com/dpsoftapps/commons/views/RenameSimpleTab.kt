@@ -7,11 +7,11 @@ import android.util.AttributeSet
 import android.widget.RelativeLayout
 import com.dpsoftapps.commons.R
 import com.dpsoftapps.commons.activities.BaseSimpleActivity
+import com.dpsoftapps.commons.databinding.TabRenameSimpleBinding
 import com.dpsoftapps.commons.extensions.*
 import com.dpsoftapps.commons.interfaces.RenameTab
 import com.dpsoftapps.commons.models.Android30RenameFormat
 import com.dpsoftapps.commons.models.FileDirItem
-import kotlinx.android.synthetic.main.tab_rename_simple.view.*
 import java.io.File
 
 class RenameSimpleTab(context: Context, attrs: AttributeSet) : RelativeLayout(context, attrs), RenameTab {
@@ -19,10 +19,12 @@ class RenameSimpleTab(context: Context, attrs: AttributeSet) : RelativeLayout(co
     var stopLooping = false     // we should request the permission on Android 30+ for all uris at once, not one by one
     var activity: BaseSimpleActivity? = null
     var paths = ArrayList<String>()
+    private lateinit var binding: TabRenameSimpleBinding
 
     override fun onFinishInflate() {
         super.onFinishInflate()
-        context.updateTextColors(rename_simple_holder)
+        binding = TabRenameSimpleBinding.bind(this)
+        context.updateTextColors(binding.renameSimpleHolder)
     }
 
     override fun initTab(activity: BaseSimpleActivity, paths: ArrayList<String>) {
@@ -32,8 +34,8 @@ class RenameSimpleTab(context: Context, attrs: AttributeSet) : RelativeLayout(co
 
     override fun dialogConfirmed(useMediaFileExtension: Boolean, callback: (success: Boolean) -> Unit) {
         stopLooping = false
-        val valueToAdd = rename_simple_value.text.toString()
-        val append = rename_simple_radio_group.checkedRadioButtonId == rename_simple_radio_append.id
+        val valueToAdd = binding.renameSimpleValue.text.toString()
+        val append = binding.renameSimpleRadioGroup.checkedRadioButtonId == binding.renameSimpleRadioAppend.id
 
         if (valueToAdd.isEmpty()) {
             callback(false)

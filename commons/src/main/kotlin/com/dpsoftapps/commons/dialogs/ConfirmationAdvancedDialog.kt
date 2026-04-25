@@ -3,9 +3,9 @@ package com.dpsoftapps.commons.dialogs
 import android.app.Activity
 import androidx.appcompat.app.AlertDialog
 import com.dpsoftapps.commons.R
+import com.dpsoftapps.commons.databinding.DialogMessageBinding
 import com.dpsoftapps.commons.extensions.getAlertDialogBuilder
 import com.dpsoftapps.commons.extensions.setupDialogStuff
-import kotlinx.android.synthetic.main.dialog_message.view.*
 
 // similar fo ConfirmationDialog, but has a callback for negative button too
 class ConfirmationAdvancedDialog(
@@ -15,8 +15,8 @@ class ConfirmationAdvancedDialog(
     private var dialog: AlertDialog? = null
 
     init {
-        val view = activity.layoutInflater.inflate(R.layout.dialog_message, null)
-        view.message.text = if (message.isEmpty()) activity.resources.getString(messageId) else message
+        val binding = DialogMessageBinding.inflate(activity.layoutInflater)
+        binding.message.text = if (message.isEmpty()) activity.resources.getString(messageId) else message
 
         val builder = activity.getAlertDialogBuilder()
             .setPositiveButton(positive) { dialog, which -> positivePressed() }
@@ -30,7 +30,7 @@ class ConfirmationAdvancedDialog(
         }
 
         builder.apply {
-            activity.setupDialogStuff(view, this, cancelOnTouchOutside = cancelOnTouchOutside) { alertDialog ->
+            activity.setupDialogStuff(binding.root, this, cancelOnTouchOutside = cancelOnTouchOutside) { alertDialog ->
                 dialog = alertDialog
             }
         }

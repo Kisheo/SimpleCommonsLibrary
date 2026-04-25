@@ -6,9 +6,9 @@ import android.view.View
 import android.view.ViewGroup
 import com.dpsoftapps.commons.R
 import com.dpsoftapps.commons.activities.BaseSimpleActivity
+import com.dpsoftapps.commons.databinding.FilepickerFavoriteBinding
 import com.dpsoftapps.commons.extensions.getTextSize
 import com.dpsoftapps.commons.views.MyRecyclerView
-import kotlinx.android.synthetic.main.filepicker_favorite.view.*
 
 class FilepickerFavoritesAdapter(
     activity: BaseSimpleActivity, val paths: List<String>, recyclerView: MyRecyclerView,
@@ -52,10 +52,10 @@ class FilepickerFavoritesAdapter(
     override fun onActionModeDestroyed() {}
 
     private fun setupView(view: View, path: String) {
-        view.apply {
-            filepicker_favorite_label.text = path
-            filepicker_favorite_label.setTextColor(textColor)
-            filepicker_favorite_label.setTextSize(TypedValue.COMPLEX_UNIT_PX, fontSize)
+        FilepickerFavoriteBinding.bind(view).apply {
+            filepickerFavoriteLabel.text = path
+            filepickerFavoriteLabel.setTextColor(textColor)
+            filepickerFavoriteLabel.setTextSize(TypedValue.COMPLEX_UNIT_PX, fontSize)
         }
     }
 }

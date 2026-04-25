@@ -6,9 +6,9 @@ import androidx.appcompat.app.AlertDialog
 import com.google.android.material.appbar.MaterialToolbar
 import com.dpsoftapps.commons.R
 import com.dpsoftapps.commons.activities.BaseSimpleActivity
+import com.dpsoftapps.commons.databinding.DialogLineColorPickerBinding
 import com.dpsoftapps.commons.extensions.*
 import com.dpsoftapps.commons.interfaces.LineColorPickerListener
-import kotlinx.android.synthetic.main.dialog_line_color_picker.view.*
 
 class LineColorPickerDialog(
     val activity: BaseSimpleActivity, val color: Int, val isPrimaryColorPicker: Boolean, val primaryColors: Int = R.array.md_primary_colors,
@@ -21,28 +21,28 @@ class LineColorPickerDialog(
 
     private var wasDimmedBackgroundRemoved = false
     private var dialog: AlertDialog? = null
-    private var view: View = activity.layoutInflater.inflate(R.layout.dialog_line_color_picker, null)
+    private val binding: DialogLineColorPickerBinding = DialogLineColorPickerBinding.inflate(activity.layoutInflater)
 
     init {
-        view.apply {
-            hex_code.text = color.toHex()
-            hex_code.setOnLongClickListener {
-                activity.copyToClipboard(hex_code.value.substring(1))
+        binding.apply {
+            hexCode.text = color.toHex()
+            hexCode.setOnLongClickListener {
+                activity.copyToClipboard(hexCode.value.substring(1))
                 true
             }
 
-            line_color_picker_icon.beGoneIf(isPrimaryColorPicker)
+            lineColorPickerIcon.beGoneIf(isPrimaryColorPicker)
             val indexes = getColorIndexes(color)
 
             val primaryColorIndex = indexes.first
             primaryColorChanged(primaryColorIndex)
-            primary_line_color_picker.updateColors(getColors(primaryColors), primaryColorIndex)
-            primary_line_color_picker.listener = object : LineColorPickerListener {
+            primaryLineColorPicker.updateColors(getColors(primaryColors), primaryColorIndex)
+            primaryLineColorPicker.listener = object : LineColorPickerListener {
                 override fun colorChanged(index: Int, color: Int) {
                     val secondaryColors = getColorsForIndex(index)
-                    secondary_line_color_picker.updateColors(secondaryColors)
+                    secondaryLineColorPicker.updateColors(secondaryColors)
 
-                    val newColor = if (isPrimaryColorPicker) secondary_line_color_picker.getCurrentColor() else color
+                    val newColor = if (isPrimaryColorPicker) secondaryLineColorPicker.getCurrentColor() else color
                     colorUpdated(newColor)
 
                     if (!isPrimaryColorPicker) {
@@ -51,9 +51,9 @@ class LineColorPickerDialog(
                 }
             }
 
-            secondary_line_color_picker.beVisibleIf(isPrimaryColorPicker)
-            secondary_line_color_picker.updateColors(getColorsForIndex(primaryColorIndex), indexes.second)
-            secondary_line_color_picker.listener = object : LineColorPickerListener {
+            secondaryLineColorPicker.beVisibleIf(isPrimaryColorPicker)
+            secondaryLineColorPicker.updateColors(getColorsForIndex(primaryColorIndex), indexes.second)
+            secondaryLineColorPicker.listener = object : LineColorPickerListener {
                 override fun colorChanged(index: Int, color: Int) {
                     colorUpdated(color)
                 }
@@ -65,16 +65,16 @@ class LineColorPickerDialog(
             .setNegativeButton(R.string.cancel) { dialog, which -> dialogDismissed() }
             .setOnCancelListener { dialogDismissed() }
             .apply {
-                activity.setupDialogStuff(view, this) { alertDialog ->
+                activity.setupDialogStuff(binding.root, this) { alertDialog ->
                     dialog = alertDialog
                 }
             }
     }
 
-    fun getSpecificColor() = view.secondary_line_color_picker.getCurrentColor()
+    fun getSpecificColor() = binding.secondaryLineColorPicker.getCurrentColor()
 
     private fun colorUpdated(color: Int) {
-        view.hex_code.text = color.toHex()
+        binding.hexCode.text = color.toHex()
         if (isPrimaryColorPicker) {
 
             if (toolbar != null) {
@@ -105,7 +105,7 @@ class LineColorPickerDialog(
     }
 
     private fun primaryColorChanged(index: Int) {
-        view.line_color_picker_icon.setImageResource(appIconIDs?.getOrNull(index) ?: 0)
+        binding.lineColorPickerIcon.setImageResource(appIconIDs?.getOrNull(index) ?: 0)
     }
 
     private fun getDefaultColorPair() = Pair(DEFAULT_PRIMARY_COLOR_INDEX, DEFAULT_SECONDARY_COLOR_INDEX)
@@ -115,7 +115,7 @@ class LineColorPickerDialog(
     }
 
     private fun dialogConfirmed() {
-        val targetView = if (isPrimaryColorPicker) view.secondary_line_color_picker else view.primary_line_color_picker
+        val targetView = if (isPrimaryColorPicker) binding.secondaryLineColorPicker else binding.primaryLineColorPicker
         val color = targetView.getCurrentColor()
         callback(true, color)
     }

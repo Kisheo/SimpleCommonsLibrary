@@ -11,15 +11,16 @@ import android.view.View
 import androidx.core.net.toUri
 import androidx.core.view.isEmpty
 import com.dpsoftapps.commons.R
+import com.dpsoftapps.commons.databinding.ActivityAboutBinding
+import com.dpsoftapps.commons.databinding.ItemAboutBinding
 import com.dpsoftapps.commons.dialogs.ConfirmationAdvancedDialog
 import com.dpsoftapps.commons.dialogs.RateStarsDialog
 import com.dpsoftapps.commons.extensions.*
 import com.dpsoftapps.commons.helpers.*
 import com.dpsoftapps.commons.models.FAQItem
-import kotlinx.android.synthetic.main.activity_about.*
-import kotlinx.android.synthetic.main.item_about.view.*
 
 class AboutActivity : BaseSimpleActivity() {
+    private lateinit var binding: ActivityAboutBinding
     private var appName = ""
     private var primaryColor = 0
     private var textColor = 0
@@ -38,32 +39,33 @@ class AboutActivity : BaseSimpleActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         isMaterialActivity = true
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_about)
+        binding = ActivityAboutBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         primaryColor = getProperPrimaryColor()
         textColor = getProperTextColor()
         backgroundColor = getProperBackgroundColor()
         inflater = LayoutInflater.from(this)
 
-        updateMaterialActivityViews(about_coordinator, about_holder, useTransparentNavigation = true, useTopSearchMenu = false)
-        setupMaterialScrollListener(about_nested_scrollview, about_toolbar)
+        updateMaterialActivityViews(binding.aboutCoordinator, binding.aboutHolder, useTransparentNavigation = true, useTopSearchMenu = false)
+        setupMaterialScrollListener(binding.aboutNestedScrollview, binding.aboutToolbar)
 
         appName = intent.getStringExtra(APP_NAME) ?: ""
 
-        arrayOf(about_support, about_help_us, about_social, about_other).forEach {
+        arrayOf(binding.aboutSupport, binding.aboutHelpUs, binding.aboutSocial, binding.aboutOther).forEach {
             it.setTextColor(primaryColor)
         }
     }
 
     override fun onResume() {
         super.onResume()
-        updateTextColors(about_nested_scrollview)
-        setupToolbar(about_toolbar, NavigationIcon.Arrow)
+        updateTextColors(binding.aboutNestedScrollview)
+        setupToolbar(binding.aboutToolbar, NavigationIcon.Arrow)
 
-        about_support_layout.removeAllViews()
-        about_help_us_layout.removeAllViews()
-        about_social_layout.removeAllViews()
-        about_other_layout.removeAllViews()
+        binding.aboutSupportLayout.removeAllViews()
+        binding.aboutHelpUsLayout.removeAllViews()
+        binding.aboutSocialLayout.removeAllViews()
+        binding.aboutOtherLayout.removeAllViews()
 
         setupFAQ()
       //  setupEmail()
@@ -85,13 +87,11 @@ class AboutActivity : BaseSimpleActivity() {
     private fun setupFAQ() {
         val faqItems = intent.getSerializableExtra(APP_FAQ) as ArrayList<FAQItem>
         if (faqItems.isNotEmpty()) {
-            inflater?.inflate(R.layout.item_about, null)?.apply {
-                setupAboutItem(this, R.drawable.ic_question_mark_vector, R.string.frequently_asked_questions)
-                about_support_layout.addView(this)
-
-                setOnClickListener {
-                    launchFAQActivity()
-                }
+            val itemBinding = ItemAboutBinding.inflate(inflater!!, null, false)
+            setupAboutItem(itemBinding.root, R.drawable.ic_question_mark_vector, R.string.frequently_asked_questions)
+            binding.aboutSupportLayout.addView(itemBinding.root)
+            itemBinding.root.setOnClickListener {
+                launchFAQActivity()
             }
         }
     }
@@ -108,32 +108,30 @@ class AboutActivity : BaseSimpleActivity() {
 
     private fun setupEmail() {
         if (resources.getBoolean(R.bool.hide_all_external_links)) {
-            if (about_support_layout.isEmpty()) {
-                about_support.beGone()
-                about_support_divider.beGone()
+            if (binding.aboutSupportLayout.isEmpty()) {
+                binding.aboutSupport.beGone()
+                binding.aboutSupportDivider.beGone()
             }
 
             return
         }
 
-        inflater?.inflate(R.layout.item_about, null)?.apply {
-            setupAboutItem(this, R.drawable.ic_mail_vector, R.string.my_email)
-            about_support_layout.addView(this)
-
-            setOnClickListener {
-                val msg = "${getString(R.string.before_asking_question_read_faq)}\n\n${getString(R.string.make_sure_latest)}"
-                if (intent.getBooleanExtra(SHOW_FAQ_BEFORE_MAIL, false) && !baseConfig.wasBeforeAskingShown) {
-                    baseConfig.wasBeforeAskingShown = true
-                    ConfirmationAdvancedDialog(this@AboutActivity, msg, 0, R.string.read_faq, R.string.skip) { success ->
-                        if (success) {
-                            launchFAQActivity()
-                        } else {
-                            launchEmailIntent()
-                        }
+        val itemBinding = ItemAboutBinding.inflate(inflater!!, null, false)
+        setupAboutItem(itemBinding.root, R.drawable.ic_mail_vector, R.string.my_email)
+        binding.aboutSupportLayout.addView(itemBinding.root)
+        itemBinding.root.setOnClickListener {
+            val msg = "${getString(R.string.before_asking_question_read_faq)}\n\n${getString(R.string.make_sure_latest)}"
+            if (intent.getBooleanExtra(SHOW_FAQ_BEFORE_MAIL, false) && !baseConfig.wasBeforeAskingShown) {
+                baseConfig.wasBeforeAskingShown = true
+                ConfirmationAdvancedDialog(this@AboutActivity, msg, 0, R.string.read_faq, R.string.skip) { success ->
+                    if (success) {
+                        launchFAQActivity()
+                    } else {
+                        launchEmailIntent()
                     }
-                } else {
-                    launchEmailIntent()
                 }
+            } else {
+                launchEmailIntent()
             }
         }
     }
@@ -179,22 +177,20 @@ class AboutActivity : BaseSimpleActivity() {
             return
         }
 
-        inflater?.inflate(R.layout.item_about, null)?.apply {
-            setupAboutItem(this, R.drawable.ic_star_vector, R.string.rate_us)
-            about_help_us_layout.addView(this)
-
-            setOnClickListener {
-                if (baseConfig.wasBeforeRateShown) {
-                    launchRateUsPrompt()
-                } else {
-                    baseConfig.wasBeforeRateShown = true
-                    val msg = "${getString(R.string.before_rate_read_faq)}\n\n${getString(R.string.make_sure_latest)}"
-                    ConfirmationAdvancedDialog(this@AboutActivity, msg, 0, R.string.read_faq, R.string.skip) { success ->
-                        if (success) {
-                            launchFAQActivity()
-                        } else {
-                            launchRateUsPrompt()
-                        }
+        val itemBinding = ItemAboutBinding.inflate(inflater!!, null, false)
+        setupAboutItem(itemBinding.root, R.drawable.ic_star_vector, R.string.rate_us)
+        binding.aboutHelpUsLayout.addView(itemBinding.root)
+        itemBinding.root.setOnClickListener {
+            if (baseConfig.wasBeforeRateShown) {
+                launchRateUsPrompt()
+            } else {
+                baseConfig.wasBeforeRateShown = true
+                val msg = "${getString(R.string.before_rate_read_faq)}\n\n${getString(R.string.make_sure_latest)}"
+                ConfirmationAdvancedDialog(this@AboutActivity, msg, 0, R.string.read_faq, R.string.skip) { success ->
+                    if (success) {
+                        launchFAQActivity()
+                    } else {
+                        launchRateUsPrompt()
                     }
                 }
             }
@@ -214,44 +210,38 @@ class AboutActivity : BaseSimpleActivity() {
             return
         }
 
-        inflater?.inflate(R.layout.item_about, null)?.apply {
-            setupAboutItem(this, R.drawable.ic_add_person_vector, R.string.invite_friends)
-            about_help_us_layout.addView(this)
-
-            setOnClickListener {
-                val text = String.format(getString(R.string.share_text), appName, getStoreUrl())
-                Intent().apply {
-                    action = ACTION_SEND
-                    putExtra(EXTRA_SUBJECT, appName)
-                    putExtra(EXTRA_TEXT, text)
-                    type = "text/plain"
-                    startActivity(createChooser(this, getString(R.string.invite_via)))
-                }
+        val itemBinding = ItemAboutBinding.inflate(inflater!!, null, false)
+        setupAboutItem(itemBinding.root, R.drawable.ic_add_person_vector, R.string.invite_friends)
+        binding.aboutHelpUsLayout.addView(itemBinding.root)
+        itemBinding.root.setOnClickListener {
+            val text = String.format(getString(R.string.share_text), appName, getStoreUrl())
+            Intent().apply {
+                action = ACTION_SEND
+                putExtra(EXTRA_SUBJECT, appName)
+                putExtra(EXTRA_TEXT, text)
+                type = "text/plain"
+                startActivity(createChooser(this, getString(R.string.invite_via)))
             }
         }
     }
 
     private fun setupContributors() {
-        inflater?.inflate(R.layout.item_about, null)?.apply {
-            setupAboutItem(this, R.drawable.ic_face_vector, R.string.contributors)
-            about_help_us_layout.addView(this)
-
-            setOnClickListener {
-                val intent = Intent(applicationContext, ContributorsActivity::class.java)
-                startActivity(intent)
-            }
+        val itemBinding = ItemAboutBinding.inflate(inflater!!, null, false)
+        setupAboutItem(itemBinding.root, R.drawable.ic_face_vector, R.string.contributors)
+        binding.aboutHelpUsLayout.addView(itemBinding.root)
+        itemBinding.root.setOnClickListener {
+            val intent = Intent(applicationContext, ContributorsActivity::class.java)
+            startActivity(intent)
         }
     }
 
     private fun setupDonate() {
         if (resources.getBoolean(R.bool.show_donate_in_about) && !resources.getBoolean(R.bool.hide_all_external_links)) {
-            inflater?.inflate(R.layout.item_about, null)?.apply {
-                setupAboutItem(this, R.drawable.ic_dollar_vector, R.string.donate)
-                about_help_us_layout.addView(this)
-
-                setOnClickListener {
-                    launchViewIntent(getString(R.string.donate_url))
-                }
+            val itemBinding = ItemAboutBinding.inflate(inflater!!, null, false)
+            setupAboutItem(itemBinding.root, R.drawable.ic_dollar_vector, R.string.donate)
+            binding.aboutHelpUsLayout.addView(itemBinding.root)
+            itemBinding.root.setOnClickListener {
+                launchViewIntent(getString(R.string.donate_url))
             }
         }
     }
@@ -261,22 +251,20 @@ class AboutActivity : BaseSimpleActivity() {
             return
         }
 
-        inflater?.inflate(R.layout.item_about, null)?.apply {
-            about_item_icon.setImageResource(R.drawable.ic_facebook_vector)
-            about_item_label.setText(R.string.facebook)
-            about_item_label.setTextColor(textColor)
-            about_social_layout.addView(this)
-
-            setOnClickListener {
-                var link = "https://www.facebook.com/simplemobiletools"
-                try {
-                    packageManager.getPackageInfo("com.facebook.katana", 0)
-                    link = "fb://page/150270895341774"
-                } catch (ignored: Exception) {
-                }
-
-                launchViewIntent(link)
+        val itemBinding = ItemAboutBinding.inflate(inflater!!, null, false)
+        itemBinding.aboutItemIcon.setImageResource(R.drawable.ic_facebook_vector)
+        itemBinding.aboutItemLabel.setText(R.string.facebook)
+        itemBinding.aboutItemLabel.setTextColor(textColor)
+        binding.aboutSocialLayout.addView(itemBinding.root)
+        itemBinding.root.setOnClickListener {
+            var link = "https://www.facebook.com/simplemobiletools"
+            try {
+                packageManager.getPackageInfo("com.facebook.katana", 0)
+                link = "fb://page/150270895341774"
+            } catch (ignored: Exception) {
             }
+
+            launchViewIntent(link)
         }
     }
 
@@ -285,15 +273,13 @@ class AboutActivity : BaseSimpleActivity() {
             return
         }
 
-        inflater?.inflate(R.layout.item_about, null)?.apply {
-            about_item_icon.setImageDrawable(resources.getColoredDrawableWithColor(R.drawable.ic_github_vector, backgroundColor.getContrastColor()))
-            about_item_label.setText(R.string.github)
-            about_item_label.setTextColor(textColor)
-            about_social_layout.addView(this)
-
-            setOnClickListener {
-                launchViewIntent("https://github.com/Kisheo")
-            }
+        val itemBinding = ItemAboutBinding.inflate(inflater!!, null, false)
+        itemBinding.aboutItemIcon.setImageDrawable(resources.getColoredDrawableWithColor(R.drawable.ic_github_vector, backgroundColor.getContrastColor()))
+        itemBinding.aboutItemLabel.setText(R.string.github)
+        itemBinding.aboutItemLabel.setTextColor(textColor)
+        binding.aboutSocialLayout.addView(itemBinding.root)
+        itemBinding.root.setOnClickListener {
+            launchViewIntent("https://github.com/Kisheo")
         }
     }
 
@@ -302,37 +288,33 @@ class AboutActivity : BaseSimpleActivity() {
             return
         }
 
-        inflater?.inflate(R.layout.item_about, null)?.apply {
-            about_item_icon.setImageResource(R.drawable.ic_reddit_vector)
-            about_item_label.setText(R.string.reddit)
-            about_item_label.setTextColor(textColor)
-            about_social_layout.addView(this)
-
-            setOnClickListener {
-                launchViewIntent("https://www.reddit.com/r/dpsoftApps")
-            }
+        val itemBinding = ItemAboutBinding.inflate(inflater!!, null, false)
+        itemBinding.aboutItemIcon.setImageResource(R.drawable.ic_reddit_vector)
+        itemBinding.aboutItemLabel.setText(R.string.reddit)
+        itemBinding.aboutItemLabel.setTextColor(textColor)
+        binding.aboutSocialLayout.addView(itemBinding.root)
+        itemBinding.root.setOnClickListener {
+            launchViewIntent("https://www.reddit.com/r/dpsoftApps")
         }
     }
 
     private fun setupTelegram() {
         if (resources.getBoolean(R.bool.hide_all_external_links)) {
-            if (about_social_layout.isEmpty()) {
-                about_social.beGone()
-                about_social_divider.beGone()
+            if (binding.aboutSocialLayout.isEmpty()) {
+                binding.aboutSocial.beGone()
+                binding.aboutSocialDivider.beGone()
             }
 
             return
         }
 
-        inflater?.inflate(R.layout.item_about, null)?.apply {
-            about_item_icon.setImageResource(R.drawable.ic_telegram_vector)
-            about_item_label.setText(R.string.telegram)
-            about_item_label.setTextColor(textColor)
-            about_social_layout.addView(this)
-
-            setOnClickListener {
-                launchViewIntent("https://t.me/Dpsxxxxxxx")
-            }
+        val itemBinding = ItemAboutBinding.inflate(inflater!!, null, false)
+        itemBinding.aboutItemIcon.setImageResource(R.drawable.ic_telegram_vector)
+        itemBinding.aboutItemLabel.setText(R.string.telegram)
+        itemBinding.aboutItemLabel.setTextColor(textColor)
+        binding.aboutSocialLayout.addView(itemBinding.root)
+        itemBinding.root.setOnClickListener {
+            launchViewIntent("https://t.me/Dpsxxxxxxx")
         }
     }
 
@@ -341,13 +323,11 @@ class AboutActivity : BaseSimpleActivity() {
             return
         }
 
-        inflater?.inflate(R.layout.item_about, null)?.apply {
-            setupAboutItem(this, R.drawable.ic_heart_vector, R.string.more_apps_from_us)
-            about_other_layout.addView(this)
-
-            setOnClickListener {
-                launchMoreAppsFromUsIntent()
-            }
+        val itemBinding = ItemAboutBinding.inflate(inflater!!, null, false)
+        setupAboutItem(itemBinding.root, R.drawable.ic_heart_vector, R.string.more_apps_from_us)
+        binding.aboutOtherLayout.addView(itemBinding.root)
+        itemBinding.root.setOnClickListener {
+            launchMoreAppsFromUsIntent()
         }
     }
 
@@ -356,13 +336,11 @@ class AboutActivity : BaseSimpleActivity() {
             return
         }
 
-        inflater?.inflate(R.layout.item_about, null)?.apply {
-            setupAboutItem(this, R.drawable.ic_link_vector, R.string.website)
-            about_other_layout.addView(this)
-
-            setOnClickListener {
-                launchViewIntent("https://website.com/")
-            }
+        val itemBinding = ItemAboutBinding.inflate(inflater!!, null, false)
+        setupAboutItem(itemBinding.root, R.drawable.ic_link_vector, R.string.website)
+        binding.aboutOtherLayout.addView(itemBinding.root)
+        itemBinding.root.setOnClickListener {
+            launchViewIntent("https://website.com/")
         }
     }
 
@@ -371,30 +349,26 @@ class AboutActivity : BaseSimpleActivity() {
             return
         }
 
-        inflater?.inflate(R.layout.item_about, null)?.apply {
-            setupAboutItem(this, R.drawable.ic_unhide_vector, R.string.privacy_policy)
-            about_other_layout.addView(this)
-
-            setOnClickListener {
-                val appId = baseConfig.appId.removeSuffix(".debug").removeSuffix(".pro").removePrefix("com.dpsoftapps.")
-                val url = "https://Kisheo.com/privacy/$appId.txt"
-                launchViewIntent(url)
-            }
+        val itemBinding = ItemAboutBinding.inflate(inflater!!, null, false)
+        setupAboutItem(itemBinding.root, R.drawable.ic_unhide_vector, R.string.privacy_policy)
+        binding.aboutOtherLayout.addView(itemBinding.root)
+        itemBinding.root.setOnClickListener {
+            val appId = baseConfig.appId.removeSuffix(".debug").removeSuffix(".pro").removePrefix("com.dpsoftapps.")
+            val url = "https://Kisheo.com/privacy/$appId.txt"
+            launchViewIntent(url)
         }
     }
 
     private fun setupLicense() {
-        inflater?.inflate(R.layout.item_about, null)?.apply {
-            setupAboutItem(this, R.drawable.ic_article_vector, R.string.third_party_licences)
-            about_other_layout.addView(this)
-
-            setOnClickListener {
-                Intent(applicationContext, LicenseActivity::class.java).apply {
-                    putExtra(APP_ICON_IDS, getAppIconIDs())
-                    putExtra(APP_LAUNCHER_NAME, getAppLauncherName())
-                    putExtra(APP_LICENSES, intent.getLongExtra(APP_LICENSES, 0))
-                    startActivity(this)
-                }
+        val itemBinding = ItemAboutBinding.inflate(inflater!!, null, false)
+        setupAboutItem(itemBinding.root, R.drawable.ic_article_vector, R.string.third_party_licences)
+        binding.aboutOtherLayout.addView(itemBinding.root)
+        itemBinding.root.setOnClickListener {
+            Intent(applicationContext, LicenseActivity::class.java).apply {
+                putExtra(APP_ICON_IDS, getAppIconIDs())
+                putExtra(APP_LAUNCHER_NAME, getAppLauncherName())
+                putExtra(APP_LICENSES, intent.getLongExtra(APP_LICENSES, 0))
+                startActivity(this)
             }
         }
     }
@@ -405,37 +379,35 @@ class AboutActivity : BaseSimpleActivity() {
             version += " ${getString(R.string.pro)}"
         }
 
-        inflater?.inflate(R.layout.item_about, null)?.apply {
-            about_item_icon.setImageDrawable(resources.getColoredDrawableWithColor(R.drawable.ic_info_vector, textColor))
-            val fullVersion = String.format(getString(R.string.version_placeholder, version))
-            about_item_label.text = fullVersion
-            about_item_label.setTextColor(textColor)
-            about_other_layout.addView(this)
-
-            setOnClickListener {
-                if (firstVersionClickTS == 0L) {
-                    firstVersionClickTS = System.currentTimeMillis()
-                    Handler().postDelayed({
-                        firstVersionClickTS = 0L
-                        clicksSinceFirstClick = 0
-                    }, EASTER_EGG_TIME_LIMIT)
-                }
-
-                clicksSinceFirstClick++
-                if (clicksSinceFirstClick >= EASTER_EGG_REQUIRED_CLICKS) {
-                    toast(R.string.hello)
+        val itemBinding = ItemAboutBinding.inflate(inflater!!, null, false)
+        itemBinding.aboutItemIcon.setImageDrawable(resources.getColoredDrawableWithColor(R.drawable.ic_info_vector, textColor))
+        val fullVersion = String.format(getString(R.string.version_placeholder, version))
+        itemBinding.aboutItemLabel.text = fullVersion
+        itemBinding.aboutItemLabel.setTextColor(textColor)
+        binding.aboutOtherLayout.addView(itemBinding.root)
+        itemBinding.root.setOnClickListener {
+            if (firstVersionClickTS == 0L) {
+                firstVersionClickTS = System.currentTimeMillis()
+                Handler().postDelayed({
                     firstVersionClickTS = 0L
                     clicksSinceFirstClick = 0
-                }
+                }, EASTER_EGG_TIME_LIMIT)
+            }
+
+            clicksSinceFirstClick++
+            if (clicksSinceFirstClick >= EASTER_EGG_REQUIRED_CLICKS) {
+                toast(R.string.hello)
+                firstVersionClickTS = 0L
+                clicksSinceFirstClick = 0
             }
         }
     }
 
     private fun setupAboutItem(view: View, drawableId: Int, textId: Int) {
-        view.apply {
-            about_item_icon.setImageDrawable(resources.getColoredDrawableWithColor(drawableId, textColor))
-            about_item_label.setText(textId)
-            about_item_label.setTextColor(textColor)
+        ItemAboutBinding.bind(view).apply {
+            aboutItemIcon.setImageDrawable(resources.getColoredDrawableWithColor(drawableId, textColor))
+            aboutItemLabel.setText(textId)
+            aboutItemLabel.setTextColor(textColor)
         }
     }
 }
