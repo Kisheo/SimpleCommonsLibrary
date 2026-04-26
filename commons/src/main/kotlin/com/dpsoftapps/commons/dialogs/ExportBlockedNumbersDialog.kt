@@ -3,10 +3,10 @@ package com.dpsoftapps.commons.dialogs
 import androidx.appcompat.app.AlertDialog
 import com.dpsoftapps.commons.R
 import com.dpsoftapps.commons.activities.BaseSimpleActivity
+import com.dpsoftapps.commons.databinding.DialogExportBlockedNumbersBinding
 import com.dpsoftapps.commons.extensions.*
 import com.dpsoftapps.commons.helpers.BLOCKED_NUMBERS_EXPORT_EXTENSION
 import com.dpsoftapps.commons.helpers.ensureBackgroundThread
-import kotlinx.android.synthetic.main.dialog_export_blocked_numbers.view.*
 import java.io.File
 
 class ExportBlockedNumbersDialog(
@@ -19,19 +19,18 @@ class ExportBlockedNumbersDialog(
     private val config = activity.baseConfig
 
     init {
-        val view = activity.layoutInflater.inflate(R.layout.dialog_export_blocked_numbers, null).apply {
-            export_blocked_numbers_folder.text = activity.humanizePath(realPath)
-            export_blocked_numbers_filename.setText("${activity.getString(R.string.blocked_numbers)}_${activity.getCurrentFormattedDateTime()}")
+        val binding = DialogExportBlockedNumbersBinding.inflate(activity.layoutInflater)
+        binding.exportBlockedNumbersFolder.text = activity.humanizePath(realPath)
+        binding.exportBlockedNumbersFilename.setText("${activity.getString(R.string.blocked_numbers)}_${activity.getCurrentFormattedDateTime()}")
 
-            if (hidePath) {
-                export_blocked_numbers_folder_label.beGone()
-                export_blocked_numbers_folder.beGone()
-            } else {
-                export_blocked_numbers_folder.setOnClickListener {
-                    FilePickerDialog(activity, realPath, false, showFAB = true) {
-                        export_blocked_numbers_folder.text = activity.humanizePath(it)
-                        realPath = it
-                    }
+        if (hidePath) {
+            binding.exportBlockedNumbersFolderLabel.beGone()
+            binding.exportBlockedNumbersFolder.beGone()
+        } else {
+            binding.exportBlockedNumbersFolder.setOnClickListener {
+                FilePickerDialog(activity, realPath, false, showFAB = true) {
+                    binding.exportBlockedNumbersFolder.text = activity.humanizePath(it)
+                    realPath = it
                 }
             }
         }
@@ -40,10 +39,10 @@ class ExportBlockedNumbersDialog(
             .setPositiveButton(R.string.ok, null)
             .setNegativeButton(R.string.cancel, null)
             .apply {
-                activity.setupDialogStuff(view, this, R.string.export_blocked_numbers) { alertDialog ->
-                    alertDialog.showKeyboard(view.export_blocked_numbers_filename)
+                activity.setupDialogStuff(binding.root, this, R.string.export_blocked_numbers) { alertDialog ->
+                    alertDialog.showKeyboard(binding.exportBlockedNumbersFilename)
                     alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-                        val filename = view.export_blocked_numbers_filename.value
+                        val filename = binding.exportBlockedNumbersFilename.value
                         when {
                             filename.isEmpty() -> activity.toast(R.string.empty_name)
                             filename.isAValidFilename() -> {

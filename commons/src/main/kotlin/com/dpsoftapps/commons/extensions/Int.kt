@@ -99,8 +99,8 @@ fun Int.addBitIf(add: Boolean, bit: Int) =
         removeBit(bit)
     }
 
-// TODO: how to do "bits & ~bit" in kotlin?
-fun Int.removeBit(bit: Int) = addBit(bit) - bit
+// properly clear a bit: "bits & ~bit"
+fun Int.removeBit(bit: Int) = this and bit.inv()
 
 fun Int.addBit(bit: Int) = this or bit
 

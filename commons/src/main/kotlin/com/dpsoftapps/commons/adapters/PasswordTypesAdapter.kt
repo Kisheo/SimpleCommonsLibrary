@@ -5,7 +5,7 @@ import android.util.SparseArray
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.biometric.auth.AuthPromptHost
+import androidx.fragment.app.FragmentActivity
 import androidx.viewpager.widget.PagerAdapter
 import com.dpsoftapps.commons.R
 import com.dpsoftapps.commons.helpers.PROTECTION_FINGERPRINT
@@ -21,7 +21,7 @@ class PasswordTypesAdapter(
     private val requiredHash: String,
     private val hashListener: HashListener,
     private val scrollView: MyScrollView,
-    private val biometricPromptHost: AuthPromptHost,
+    private val biometricPromptHost: FragmentActivity,
     private val showBiometricIdTab: Boolean,
     private val showBiometricAuthentication: Boolean
 ) : PagerAdapter() {

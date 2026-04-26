@@ -12,10 +12,10 @@ import android.widget.PopupWindow
 import androidx.core.content.ContextCompat
 import androidx.core.widget.PopupWindowCompat
 import com.dpsoftapps.commons.R
+import com.dpsoftapps.commons.databinding.ItemActionModePopupBinding
 import com.dpsoftapps.commons.extensions.applyColorFilter
 import com.dpsoftapps.commons.extensions.windowManager
 import com.dpsoftapps.commons.helpers.isRPlus
-import kotlinx.android.synthetic.main.item_action_mode_popup.view.cab_item
 
 class BottomActionMenuItemPopup(
     private val context: Context,
@@ -44,11 +44,12 @@ class BottomActionMenuItemPopup(
             }
 
             val item = items[position]
-            view!!.cab_item.text = item.title
+            val binding = ItemActionModePopupBinding.bind(view!!)
+            binding.cabItem.text = item.title
             if (item.icon != View.NO_ID) {
                 val icon = ContextCompat.getDrawable(context, item.icon)
                 icon?.applyColorFilter(Color.WHITE)
-                view.cab_item.setCompoundDrawablesWithIntrinsicBounds(icon, null, null, null)
+                binding.cabItem.setCompoundDrawablesWithIntrinsicBounds(icon, null, null, null)
             }
 
             view.setOnClickListener {

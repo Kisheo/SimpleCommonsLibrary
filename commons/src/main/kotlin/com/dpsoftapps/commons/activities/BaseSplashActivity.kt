@@ -2,6 +2,7 @@ package com.dpsoftapps.commons.activities
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.res.ResourcesCompat
 import com.dpsoftapps.commons.R
 import com.dpsoftapps.commons.extensions.*
 import com.dpsoftapps.commons.helpers.SIDELOADING_TRUE
@@ -26,8 +27,8 @@ abstract class BaseSplashActivity : AppCompatActivity() {
             if (isUsingAutoTheme) {
                 val isUsingSystemDarkTheme = isUsingSystemDarkTheme()
                 isUsingSharedTheme = false
-                textColor = resources.getColor(if (isUsingSystemDarkTheme) R.color.theme_dark_text_color else R.color.theme_light_text_color)
-                backgroundColor = resources.getColor(if (isUsingSystemDarkTheme) R.color.theme_dark_background_color else R.color.theme_light_background_color)
+                textColor = ResourcesCompat.getColor(resources, if (isUsingSystemDarkTheme) R.color.theme_dark_text_color else R.color.theme_light_text_color, theme)
+                backgroundColor = ResourcesCompat.getColor(resources, if (isUsingSystemDarkTheme) R.color.theme_dark_background_color else R.color.theme_light_background_color, theme)
             }
         }
 

@@ -4,24 +4,24 @@ import android.view.View
 import androidx.appcompat.app.AlertDialog
 import com.dpsoftapps.commons.R
 import com.dpsoftapps.commons.activities.BaseSimpleActivity
+import com.dpsoftapps.commons.databinding.DialogCreateNewFolderBinding
 import com.dpsoftapps.commons.extensions.*
 import com.dpsoftapps.commons.helpers.isRPlus
-import kotlinx.android.synthetic.main.dialog_create_new_folder.view.*
 import java.io.File
 
 class CreateNewFolderDialog(val activity: BaseSimpleActivity, val path: String, val callback: (path: String) -> Unit) {
     init {
-        val view = activity.layoutInflater.inflate(R.layout.dialog_create_new_folder, null)
-        view.folder_path.setText("${activity.humanizePath(path).trimEnd('/')}/")
+        val binding = DialogCreateNewFolderBinding.inflate(activity.layoutInflater)
+        binding.folderPath.setText("${activity.humanizePath(path).trimEnd('/')}/")
 
         activity.getAlertDialogBuilder()
             .setPositiveButton(R.string.ok, null)
             .setNegativeButton(R.string.cancel, null)
             .apply {
-                activity.setupDialogStuff(view, this, R.string.create_new_folder) { alertDialog ->
-                    alertDialog.showKeyboard(view.folder_name)
+                activity.setupDialogStuff(binding.root, this, R.string.create_new_folder) { alertDialog ->
+                    alertDialog.showKeyboard(binding.folderName)
                     alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(View.OnClickListener {
-                        val name = view.folder_name.value
+                        val name = binding.folderName.value
                         when {
                             name.isEmpty() -> activity.toast(R.string.empty_name)
                             name.isAValidFilename() -> {

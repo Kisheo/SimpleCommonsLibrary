@@ -3,24 +3,25 @@ package com.dpsoftapps.commons.dialogs
 import android.app.Activity
 import androidx.appcompat.app.AlertDialog
 import com.dpsoftapps.commons.R
+import com.dpsoftapps.commons.databinding.DialogRateStarsBinding
 import com.dpsoftapps.commons.extensions.*
-import kotlinx.android.synthetic.main.dialog_rate_stars.view.*
 
 class RateStarsDialog(val activity: Activity) {
     private var dialog: AlertDialog? = null
 
     init {
-        val view = activity.layoutInflater.inflate(R.layout.dialog_rate_stars, null).apply {
+        val binding = DialogRateStarsBinding.inflate(activity.layoutInflater)
+        binding.apply {
             val primaryColor = activity.getProperPrimaryColor()
-            arrayOf(rate_star_1, rate_star_2, rate_star_3, rate_star_4, rate_star_5).forEach {
+            arrayOf(rateStar1, rateStar2, rateStar3, rateStar4, rateStar5).forEach {
                 it.applyColorFilter(primaryColor)
             }
 
-            rate_star_1.setOnClickListener { dialogCancelled(true) }
-            rate_star_2.setOnClickListener { dialogCancelled(true) }
-            rate_star_3.setOnClickListener { dialogCancelled(true) }
-            rate_star_4.setOnClickListener { dialogCancelled(true) }
-            rate_star_5.setOnClickListener {
+            rateStar1.setOnClickListener { dialogCancelled(true) }
+            rateStar2.setOnClickListener { dialogCancelled(true) }
+            rateStar3.setOnClickListener { dialogCancelled(true) }
+            rateStar4.setOnClickListener { dialogCancelled(true) }
+            rateStar5.setOnClickListener {
                 activity.redirectToRateUs()
                 dialogCancelled(true)
             }
@@ -30,7 +31,7 @@ class RateStarsDialog(val activity: Activity) {
             .setNegativeButton(R.string.later) { dialog, which -> dialogCancelled(false) }
             .setOnCancelListener { dialogCancelled(false) }
             .apply {
-                activity.setupDialogStuff(view, this, cancelOnTouchOutside = false) { alertDialog ->
+                activity.setupDialogStuff(binding.root, this, cancelOnTouchOutside = false) { alertDialog ->
                     dialog = alertDialog
                 }
             }

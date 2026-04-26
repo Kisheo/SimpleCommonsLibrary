@@ -1,6 +1,6 @@
 package com.dpsoftapps.commons.interfaces
 
-import androidx.biometric.auth.AuthPromptHost
+import androidx.fragment.app.FragmentActivity
 import com.dpsoftapps.commons.views.MyScrollView
 
 interface SecurityTab {
@@ -8,7 +8,7 @@ interface SecurityTab {
         requiredHash: String,
         listener: HashListener,
         scrollView: MyScrollView,
-        biometricPromptHost: AuthPromptHost,
+        biometricPromptHost: FragmentActivity,
         showBiometricAuthentication: Boolean
     )
 

@@ -7,8 +7,8 @@ import android.widget.RadioGroup
 import androidx.appcompat.app.AlertDialog
 import com.dpsoftapps.commons.R
 import com.dpsoftapps.commons.activities.BaseSimpleActivity
+import com.dpsoftapps.commons.databinding.DialogRadioGroupBinding
 import com.dpsoftapps.commons.extensions.*
-import kotlinx.android.synthetic.main.dialog_radio_group.view.*
 
 /**
  * A dialog for choosing between internal, root, SD card (optional) storage
@@ -52,11 +52,11 @@ class StoragePickerDialog(
         val inflater = LayoutInflater.from(activity)
         val resources = activity.resources
         val layoutParams = RadioGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-        val view = inflater.inflate(R.layout.dialog_radio_group, null)
-        radioGroup = view.dialog_radio_group
+        val binding = DialogRadioGroupBinding.inflate(inflater)
+        radioGroup = binding.dialogRadioGroup
         val basePath = currPath.getBasePath(activity)
 
-        val internalButton = inflater.inflate(R.layout.radio_button, null) as RadioButton
+        val internalButton = inflater.inflate(R.layout.radio_button, radioGroup, false) as RadioButton
         internalButton.apply {
             id = ID_INTERNAL
             text = resources.getString(R.string.internal)
@@ -69,7 +69,7 @@ class StoragePickerDialog(
         radioGroup.addView(internalButton, layoutParams)
 
         if (activity.hasExternalSDCard()) {
-            val sdButton = inflater.inflate(R.layout.radio_button, null) as RadioButton
+            val sdButton = inflater.inflate(R.layout.radio_button, radioGroup, false) as RadioButton
             sdButton.apply {
                 id = ID_SD
                 text = resources.getString(R.string.sd_card)
@@ -83,7 +83,7 @@ class StoragePickerDialog(
         }
 
         if (activity.hasOTGConnected()) {
-            val otgButton = inflater.inflate(R.layout.radio_button, null) as RadioButton
+            val otgButton = inflater.inflate(R.layout.radio_button, radioGroup, false) as RadioButton
             otgButton.apply {
                 id = ID_OTG
                 text = resources.getString(R.string.usb)
@@ -96,9 +96,8 @@ class StoragePickerDialog(
             radioGroup.addView(otgButton, layoutParams)
         }
 
-        // allow for example excluding the root folder at the gallery
         if (showRoot) {
-            val rootButton = inflater.inflate(R.layout.radio_button, null) as RadioButton
+            val rootButton = inflater.inflate(R.layout.radio_button, radioGroup, false) as RadioButton
             rootButton.apply {
                 id = ID_ROOT
                 text = resources.getString(R.string.root)
@@ -112,7 +111,7 @@ class StoragePickerDialog(
         }
 
         activity.getAlertDialogBuilder().apply {
-            activity.setupDialogStuff(view, this, R.string.select_storage) { alertDialog ->
+            activity.setupDialogStuff(binding.root, this, R.string.select_storage) { alertDialog ->
                 dialog = alertDialog
             }
         }

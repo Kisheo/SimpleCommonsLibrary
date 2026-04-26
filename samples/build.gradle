@@ -2,28 +2,47 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 
 android {
-    compileSdkVersion propCompileSdkVersion
+    compileSdk = propCompileSdkVersion
 
     defaultConfig {
         applicationId "com.dpsoftapps.commons"
-        minSdkVersion propMinSdkVersion
-        targetSdkVersion propTargetSdkVersion
+        minSdk = propMinSdkVersion
+        targetSdk = propTargetSdkVersion
         versionCode propVersionCode
         versionName propVersionName
         vectorDrawables.useSupportLibrary = true
+        // Choose a default value for the 'licensing' flavor dimension used by the commons module
+        missingDimensionStrategy 'licensing', 'foss'
+    }
+
+    // Explicit: keep buildConfig generation enabled to avoid AGP deprecation
+    buildFeatures {
+        buildConfig = true
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     buildTypes {
         release {
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
     }
-    namespace 'com.dpsoftapps.commons.samples'
+    namespace = 'com.dpsoftapps.commons.samples'
+}
+
+// Ensure Kotlin uses a compatible JVM target
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+    kotlinOptions {
+        jvmTarget = '17'
+    }
 }
 
 dependencies {

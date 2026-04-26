@@ -6,6 +6,7 @@ import android.util.TypedValue
 import android.view.Menu
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.res.ResourcesCompat
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
@@ -15,11 +16,11 @@ import com.bumptech.glide.request.RequestOptions
 import com.qtalk.recyclerviewfastscroller.RecyclerViewFastScroller
 import com.dpsoftapps.commons.R
 import com.dpsoftapps.commons.activities.BaseSimpleActivity
+import com.dpsoftapps.commons.databinding.ItemFilepickerListBinding
 import com.dpsoftapps.commons.extensions.*
 import com.dpsoftapps.commons.helpers.getFilePlaceholderDrawables
 import com.dpsoftapps.commons.models.FileDirItem
 import com.dpsoftapps.commons.views.MyRecyclerView
-import kotlinx.android.synthetic.main.item_filepicker_list.view.*
 import java.util.*
 
 class FilepickerItemsAdapter(
@@ -74,39 +75,47 @@ class FilepickerItemsAdapter(
     override fun onViewRecycled(holder: ViewHolder) {
         super.onViewRecycled(holder)
         if (!activity.isDestroyed && !activity.isFinishing) {
-            Glide.with(activity).clear(holder.itemView.list_item_icon!!)
+            // Use ViewBinding to access the image view on the recycled holder
+            val binding = ItemFilepickerListBinding.bind(holder.itemView)
+            Glide.with(activity).clear(binding.listItemIcon)
         }
     }
 
     private fun setupView(view: View, fileDirItem: FileDirItem) {
-        view.apply {
-            list_item_name.text = fileDirItem.name
-            list_item_name.setTextColor(textColor)
-            list_item_name.setTextSize(TypedValue.COMPLEX_UNIT_PX, fontSize)
+        val binding = ItemFilepickerListBinding.bind(view)
+        binding.apply {
+            listItemName.text = fileDirItem.name
+            listItemName.setTextColor(textColor)
+            listItemName.setTextSize(TypedValue.COMPLEX_UNIT_PX, fontSize)
 
-            list_item_details.setTextColor(textColor)
-            list_item_details.setTextSize(TypedValue.COMPLEX_UNIT_PX, fontSize)
+            listItemDetails.setTextColor(textColor)
+            listItemDetails.setTextSize(TypedValue.COMPLEX_UNIT_PX, fontSize)
 
             if (fileDirItem.isDirectory) {
-                list_item_icon.setImageDrawable(folderDrawable)
-                list_item_details.text = getChildrenCnt(fileDirItem)
+                listItemIcon.setImageDrawable(folderDrawable)
+                listItemDetails.text = getChildrenCnt(fileDirItem)
             } else {
-                list_item_details.text = fileDirItem.size.formatSize()
+                listItemDetails.text = fileDirItem.size.formatSize()
                 val path = fileDirItem.path
-                val placeholder = fileDrawables.getOrElse(fileDirItem.name.substringAfterLast(".").toLowerCase(Locale.getDefault()), { fileDrawable })
+                val extKey = fileDirItem.name.substringAfterLast('.').lowercase(Locale.getDefault())
+                val placeholder = fileDrawables.getOrElse(extKey, { fileDrawable })
                 val options = RequestOptions()
                     .signature(fileDirItem.getKey())
                     .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
                     .centerCrop()
                     .error(placeholder)
 
-                var itemToLoad = if (fileDirItem.name.endsWith(".apk", true)) {
-                    val packageInfo = context.packageManager.getPackageArchiveInfo(path, PackageManager.GET_ACTIVITIES)
+                // itemToLoad can be a Drawable (for apk icons), a String path, or a Uri for SAF
+                var itemToLoad: Any = if (fileDirItem.name.endsWith(".apk", true)) {
+                    val packageInfo = activity.packageManager.getPackageArchiveInfo(path, PackageManager.GET_ACTIVITIES)
                     if (packageInfo != null) {
-                        val appInfo = packageInfo.applicationInfo
-                        appInfo.sourceDir = path
-                        appInfo.publicSourceDir = path
-                        appInfo.loadIcon(context.packageManager)
+                        try {
+                            // Prefer to get the application icon from the PackageManager using package name
+                            activity.packageManager.getApplicationIcon(packageInfo.packageName)
+                        } catch (e: Exception) {
+                            // Fallback to the file path if we can't load the icon
+                            path
+                        }
                     } else {
                         path
                     }
@@ -121,15 +130,16 @@ class FilepickerItemsAdapter(
                         itemToLoad = itemToLoad.getOTGPublicPath(activity)
                     }
 
+                    // itemToLoad may be a Drawable, Uri, or String - Glide supports all of them
                     if (itemToLoad.toString().isGif()) {
-                        Glide.with(activity).asBitmap().load(itemToLoad).apply(options).into(list_item_icon)
+                        Glide.with(activity).asBitmap().load(itemToLoad).apply(options).into(listItemIcon)
                     } else {
                         Glide.with(activity)
                             .load(itemToLoad)
                             .transition(withCrossFade())
                             .apply(options)
                             .transform(CenterCrop(), RoundedCorners(cornerRadius))
-                            .into(list_item_icon)
+                            .into(listItemIcon)
                     }
                 }
             }
@@ -144,7 +154,7 @@ class FilepickerItemsAdapter(
     private fun initDrawables() {
         folderDrawable = resources.getColoredDrawableWithColor(R.drawable.ic_folder_vector, textColor)
         folderDrawable.alpha = 180
-        fileDrawable = resources.getDrawable(R.drawable.ic_file_generic)
+        fileDrawable = ResourcesCompat.getDrawable(resources, R.drawable.ic_file_generic, null) ?: throw IllegalStateException("Drawable missing")
         fileDrawables = getFilePlaceholderDrawables(activity)
     }
 

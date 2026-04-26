@@ -7,15 +7,16 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
 import com.dpsoftapps.commons.R
+import com.dpsoftapps.commons.databinding.DialogCustomIntervalPickerBinding
 import com.dpsoftapps.commons.extensions.*
 import com.dpsoftapps.commons.helpers.DAY_SECONDS
 import com.dpsoftapps.commons.helpers.HOUR_SECONDS
 import com.dpsoftapps.commons.helpers.MINUTE_SECONDS
-import kotlinx.android.synthetic.main.dialog_custom_interval_picker.view.*
 
 class CustomIntervalPickerDialog(val activity: Activity, val selectedSeconds: Int = 0, val showSeconds: Boolean = false, val callback: (minutes: Int) -> Unit) {
     private var dialog: AlertDialog? = null
-    private var view = (activity.layoutInflater.inflate(R.layout.dialog_custom_interval_picker, null) as ViewGroup)
+    private val binding = DialogCustomIntervalPickerBinding.inflate(activity.layoutInflater)
+    private val view = binding.root as ViewGroup
 
     init {
         activity.getAlertDialogBuilder()
@@ -28,29 +29,29 @@ class CustomIntervalPickerDialog(val activity: Activity, val selectedSeconds: In
                 }
             }
 
-        view.apply {
-            dialog_radio_seconds.beVisibleIf(showSeconds)
+        binding.apply {
+            dialogRadioSeconds.beVisibleIf(showSeconds)
             when {
-                selectedSeconds == 0 -> dialog_radio_view.check(R.id.dialog_radio_minutes)
+                selectedSeconds == 0 -> dialogRadioView.check(R.id.dialog_radio_minutes)
                 selectedSeconds % DAY_SECONDS == 0 -> {
-                    dialog_radio_view.check(R.id.dialog_radio_days)
-                    dialog_custom_interval_value.setText((selectedSeconds / DAY_SECONDS).toString())
+                    dialogRadioView.check(R.id.dialog_radio_days)
+                    dialogCustomIntervalValue.setText((selectedSeconds / DAY_SECONDS).toString())
                 }
                 selectedSeconds % HOUR_SECONDS == 0 -> {
-                    dialog_radio_view.check(R.id.dialog_radio_hours)
-                    dialog_custom_interval_value.setText((selectedSeconds / HOUR_SECONDS).toString())
+                    dialogRadioView.check(R.id.dialog_radio_hours)
+                    dialogCustomIntervalValue.setText((selectedSeconds / HOUR_SECONDS).toString())
                 }
                 selectedSeconds % MINUTE_SECONDS == 0 -> {
-                    dialog_radio_view.check(R.id.dialog_radio_minutes)
-                    dialog_custom_interval_value.setText((selectedSeconds / MINUTE_SECONDS).toString())
+                    dialogRadioView.check(R.id.dialog_radio_minutes)
+                    dialogCustomIntervalValue.setText((selectedSeconds / MINUTE_SECONDS).toString())
                 }
                 else -> {
-                    dialog_radio_view.check(R.id.dialog_radio_seconds)
-                    dialog_custom_interval_value.setText(selectedSeconds.toString())
+                    dialogRadioView.check(R.id.dialog_radio_seconds)
+                    dialogCustomIntervalValue.setText(selectedSeconds.toString())
                 }
             }
 
-            dialog_custom_interval_value.setOnKeyListener(object : View.OnKeyListener {
+            dialogCustomIntervalValue.setOnKeyListener(object : View.OnKeyListener {
                 override fun onKey(v: View?, keyCode: Int, event: KeyEvent): Boolean {
                     if (event.action == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER) {
                         dialog?.getButton(DialogInterface.BUTTON_POSITIVE)?.performClick()
@@ -64,8 +65,8 @@ class CustomIntervalPickerDialog(val activity: Activity, val selectedSeconds: In
     }
 
     private fun confirmReminder() {
-        val value = view.dialog_custom_interval_value.value
-        val multiplier = getMultiplier(view.dialog_radio_view.checkedRadioButtonId)
+        val value = binding.dialogCustomIntervalValue.value
+        val multiplier = getMultiplier(binding.dialogRadioView.checkedRadioButtonId)
         val minutes = Integer.valueOf(if (value.isEmpty()) "0" else value)
         callback(minutes * multiplier)
         activity.hideKeyboard()

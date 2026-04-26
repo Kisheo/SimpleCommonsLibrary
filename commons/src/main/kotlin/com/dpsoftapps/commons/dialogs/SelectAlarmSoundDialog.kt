@@ -2,6 +2,7 @@ package com.dpsoftapps.commons.dialogs
 
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.net.Uri
 import android.view.ViewGroup
@@ -11,12 +12,12 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.dpsoftapps.commons.R
 import com.dpsoftapps.commons.activities.BaseSimpleActivity
+import com.dpsoftapps.commons.databinding.DialogSelectAlarmSoundBinding
 import com.dpsoftapps.commons.extensions.*
 import com.dpsoftapps.commons.helpers.SILENT
 import com.dpsoftapps.commons.models.AlarmSound
 import com.dpsoftapps.commons.models.RadioItem
 import com.dpsoftapps.commons.views.MyCompatRadioButton
-import kotlinx.android.synthetic.main.dialog_select_alarm_sound.view.*
 
 class SelectAlarmSoundDialog(
     val activity: BaseSimpleActivity, val currentUri: String, val audioStream: Int, val pickAudioIntentId: Int,
@@ -25,7 +26,7 @@ class SelectAlarmSoundDialog(
 ) {
     private val ADD_NEW_SOUND_ID = -2
 
-    private val view = activity.layoutInflater.inflate(R.layout.dialog_select_alarm_sound, null)
+    private val binding = DialogSelectAlarmSoundBinding.inflate(activity.layoutInflater)
     private var systemAlarmSounds = ArrayList<AlarmSound>()
     private var yourAlarmSounds = ArrayList<AlarmSound>()
     private var mediaPlayer: MediaPlayer? = null
@@ -38,8 +39,8 @@ class SelectAlarmSoundDialog(
             gotSystemAlarms()
         }
 
-        view.dialog_select_alarm_your_label.setTextColor(activity.getProperPrimaryColor())
-        view.dialog_select_alarm_system_label.setTextColor(activity.getProperPrimaryColor())
+        binding.dialogSelectAlarmYourLabel.setTextColor(activity.getProperPrimaryColor())
+        binding.dialogSelectAlarmSystemLabel.setTextColor(activity.getProperPrimaryColor())
 
         addYourAlarms()
 
@@ -48,7 +49,7 @@ class SelectAlarmSoundDialog(
             .setPositiveButton(R.string.ok) { dialog, which -> dialogConfirmed() }
             .setNegativeButton(R.string.cancel, null)
             .apply {
-                activity.setupDialogStuff(view, this) { alertDialog ->
+                activity.setupDialogStuff(binding.root, this) { alertDialog ->
                     dialog = alertDialog
                     alertDialog.window?.volumeControlStream = audioStream
                 }
@@ -56,23 +57,23 @@ class SelectAlarmSoundDialog(
     }
 
     private fun addYourAlarms() {
-        view.dialog_select_alarm_your_radio.removeAllViews()
+        binding.dialogSelectAlarmYourRadio.removeAllViews()
         val token = object : TypeToken<ArrayList<AlarmSound>>() {}.type
         yourAlarmSounds = Gson().fromJson<ArrayList<AlarmSound>>(config.yourAlarmSounds, token) ?: ArrayList()
         yourAlarmSounds.add(AlarmSound(ADD_NEW_SOUND_ID, activity.getString(R.string.add_new_sound), ""))
         yourAlarmSounds.forEach {
-            addAlarmSound(it, view.dialog_select_alarm_your_radio)
+            addAlarmSound(it, binding.dialogSelectAlarmYourRadio)
         }
     }
 
     private fun gotSystemAlarms() {
         systemAlarmSounds.forEach {
-            addAlarmSound(it, view.dialog_select_alarm_system_radio)
+            addAlarmSound(it, binding.dialogSelectAlarmSystemRadio)
         }
     }
 
     private fun addAlarmSound(alarmSound: AlarmSound, holder: ViewGroup) {
-        val radioButton = (activity.layoutInflater.inflate(R.layout.item_select_alarm_sound, null) as MyCompatRadioButton).apply {
+        val radioButton = (activity.layoutInflater.inflate(R.layout.item_select_alarm_sound, holder, false) as MyCompatRadioButton).apply {
             text = alarmSound.title
             isChecked = alarmSound.uri == currentUri
             id = alarmSound.id
@@ -80,14 +81,14 @@ class SelectAlarmSoundDialog(
             setOnClickListener {
                 alarmClicked(alarmSound)
 
-                if (holder == view.dialog_select_alarm_system_radio) {
-                    view.dialog_select_alarm_your_radio.clearCheck()
+                if (holder == binding.dialogSelectAlarmSystemRadio) {
+                    binding.dialogSelectAlarmYourRadio.clearCheck()
                 } else {
-                    view.dialog_select_alarm_system_radio.clearCheck()
+                    binding.dialogSelectAlarmSystemRadio.clearCheck()
                 }
             }
 
-            if (alarmSound.id != -2 && holder == view.dialog_select_alarm_your_radio) {
+            if (alarmSound.id != -2 && holder == binding.dialogSelectAlarmYourRadio) {
                 setOnLongClickListener {
                     val items = arrayListOf(RadioItem(1, context.getString(R.string.remove)))
 
@@ -123,7 +124,8 @@ class SelectAlarmSoundDialog(
                 mediaPlayer?.reset()
                 if (mediaPlayer == null) {
                     mediaPlayer = MediaPlayer().apply {
-                        setAudioStreamType(audioStream)
+                        // use modern AudioAttributes instead of deprecated setAudioStreamType
+                        setAudioAttributes(AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_ALARM).setContentType(AudioAttributes.CONTENT_TYPE_MUSIC).build())
                         isLooping = loopAudio
                     }
                 }
@@ -146,20 +148,20 @@ class SelectAlarmSoundDialog(
         config.yourAlarmSounds = Gson().toJson(yourAlarmSounds)
         addYourAlarms()
 
-        if (alarmSound.id == view.dialog_select_alarm_your_radio.checkedRadioButtonId) {
-            view.dialog_select_alarm_your_radio.clearCheck()
-            view.dialog_select_alarm_system_radio.check(systemAlarmSounds.firstOrNull()?.id ?: 0)
+        if (alarmSound.id == binding.dialogSelectAlarmYourRadio.checkedRadioButtonId) {
+            binding.dialogSelectAlarmYourRadio.clearCheck()
+            binding.dialogSelectAlarmSystemRadio.check(systemAlarmSounds.firstOrNull()?.id ?: 0)
         }
 
         onAlarmSoundDeleted(alarmSound)
     }
 
     private fun dialogConfirmed() {
-        if (view.dialog_select_alarm_your_radio.checkedRadioButtonId != -1) {
-            val checkedId = view.dialog_select_alarm_your_radio.checkedRadioButtonId
+        if (binding.dialogSelectAlarmYourRadio.checkedRadioButtonId != -1) {
+            val checkedId = binding.dialogSelectAlarmYourRadio.checkedRadioButtonId
             onAlarmPicked(yourAlarmSounds.firstOrNull { it.id == checkedId })
         } else {
-            val checkedId = view.dialog_select_alarm_system_radio.checkedRadioButtonId
+            val checkedId = binding.dialogSelectAlarmSystemRadio.checkedRadioButtonId
             onAlarmPicked(systemAlarmSounds.firstOrNull { it.id == checkedId })
         }
     }

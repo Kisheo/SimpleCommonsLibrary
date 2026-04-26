@@ -2,8 +2,10 @@ package com.dpsoftapps.commons.adapters
 
 import android.view.*
 import android.widget.PopupMenu
+import androidx.appcompat.view.ContextThemeWrapper
 import com.dpsoftapps.commons.R
 import com.dpsoftapps.commons.activities.BaseSimpleActivity
+import com.dpsoftapps.commons.databinding.ItemManageBlockedNumberBinding
 import com.dpsoftapps.commons.extensions.copyToClipboard
 import com.dpsoftapps.commons.extensions.deleteBlockedNumber
 import com.dpsoftapps.commons.extensions.getPopupMenuTheme
@@ -11,7 +13,6 @@ import com.dpsoftapps.commons.extensions.getProperTextColor
 import com.dpsoftapps.commons.interfaces.RefreshRecyclerViewListener
 import com.dpsoftapps.commons.models.BlockedNumber
 import com.dpsoftapps.commons.views.MyRecyclerView
-import kotlinx.android.synthetic.main.item_manage_blocked_number.view.*
 
 class ManageBlockedNumbersAdapter(
     activity: BaseSimpleActivity, var blockedNumbers: ArrayList<BlockedNumber>, val listener: RefreshRecyclerViewListener?,
@@ -67,21 +68,21 @@ class ManageBlockedNumbersAdapter(
     private fun getSelectedItems() = blockedNumbers.filter { selectedKeys.contains(it.id.toInt()) } as ArrayList<BlockedNumber>
 
     private fun setupView(view: View, blockedNumber: BlockedNumber) {
-        view.apply {
-            manage_blocked_number_holder?.isSelected = selectedKeys.contains(blockedNumber.id.toInt())
-            manage_blocked_number_title.apply {
-                text = blockedNumber.number
-                setTextColor(textColor)
-            }
+        // use view binding for the item view
+        val binding = ItemManageBlockedNumberBinding.bind(view)
+        binding.manageBlockedNumberHolder.isSelected = selectedKeys.contains(blockedNumber.id.toInt())
+        binding.manageBlockedNumberTitle.apply {
+            text = blockedNumber.number
+            setTextColor(textColor)
+        }
 
-            overflow_menu_icon.drawable.apply {
-                mutate()
-                setTint(activity.getProperTextColor())
-            }
+        binding.overflowMenuIcon.drawable?.apply {
+            mutate()
+            setTint(activity.getProperTextColor())
+        }
 
-            overflow_menu_icon.setOnClickListener {
-                showPopupMenu(overflow_menu_anchor, blockedNumber)
-            }
+        binding.overflowMenuIcon.setOnClickListener {
+            showPopupMenu(binding.overflowMenuAnchor, blockedNumber)
         }
     }
 

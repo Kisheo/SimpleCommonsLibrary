@@ -1,10 +1,12 @@
 package com.dpsoftapps.commons.activities
 
 import android.os.Bundle
-import android.text.Html
+import androidx.core.text.HtmlCompat
 import android.text.method.LinkMovementMethod
 import android.view.LayoutInflater
 import com.dpsoftapps.commons.R
+import com.dpsoftapps.commons.databinding.ActivityFaqBinding
+import com.dpsoftapps.commons.databinding.ItemFaqBinding
 import com.dpsoftapps.commons.extensions.getProperBackgroundColor
 import com.dpsoftapps.commons.extensions.getProperPrimaryColor
 import com.dpsoftapps.commons.extensions.getProperTextColor
@@ -14,8 +16,6 @@ import com.dpsoftapps.commons.helpers.APP_ICON_IDS
 import com.dpsoftapps.commons.helpers.APP_LAUNCHER_NAME
 import com.dpsoftapps.commons.helpers.NavigationIcon
 import com.dpsoftapps.commons.models.FAQItem
-import kotlinx.android.synthetic.main.activity_faq.*
-import kotlinx.android.synthetic.main.item_faq.view.*
 
 class FAQActivity : BaseSimpleActivity() {
     override fun getAppIconIDs() = intent.getIntegerArrayListExtra(APP_ICON_IDS) ?: ArrayList()
@@ -25,42 +25,51 @@ class FAQActivity : BaseSimpleActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         isMaterialActivity = true
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_faq)
+        val binding = ActivityFaqBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        updateMaterialActivityViews(faq_coordinator, faq_holder, useTransparentNavigation = true, useTopSearchMenu = false)
-        setupMaterialScrollListener(faq_nested_scrollview, faq_toolbar)
+        updateMaterialActivityViews(binding.faqCoordinator, binding.faqHolder, useTransparentNavigation = true, useTopSearchMenu = false)
+        setupMaterialScrollListener(binding.faqNestedScrollview, binding.faqToolbar)
 
         val textColor = getProperTextColor()
         val backgroundColor = getProperBackgroundColor()
         val primaryColor = getProperPrimaryColor()
 
         val inflater = LayoutInflater.from(this)
-        val faqItems = intent.getSerializableExtra(APP_FAQ) as ArrayList<FAQItem>
+        @Suppress("DEPRECATION")
+        val faqItemsAny = intent.getSerializableExtra(APP_FAQ)
+        val faqItems = if (faqItemsAny is ArrayList<*>) {
+            faqItemsAny.filterIsInstance<FAQItem>() as ArrayList<FAQItem>
+        } else {
+            ArrayList()
+        }
+
         faqItems.forEach {
             val faqItem = it
-            inflater.inflate(R.layout.item_faq, null).apply {
-                faq_card.setCardBackgroundColor(backgroundColor)
-                faq_title.apply {
-                    text = if (faqItem.title is Int) getString(faqItem.title) else faqItem.title as String
-                    setTextColor(primaryColor)
-                }
+            val itemView = inflater.inflate(R.layout.item_faq, binding.faqHolder, false)
+            val itemBinding = ItemFaqBinding.bind(itemView)
 
-                faq_text.apply {
-                    text = if (faqItem.text is Int) Html.fromHtml(getString(faqItem.text)) else faqItem.text as String
-                    setTextColor(textColor)
-                    setLinkTextColor(primaryColor)
-
-                    movementMethod = LinkMovementMethod.getInstance()
-                    removeUnderlines()
-                }
-
-                faq_holder.addView(this)
+            itemBinding.faqCard.setCardBackgroundColor(backgroundColor)
+            itemBinding.faqTitle.apply {
+                text = if (faqItem.title is Int) getString(faqItem.title) else faqItem.title as String
+                setTextColor(primaryColor)
             }
+
+            itemBinding.faqText.apply {
+                text = if (faqItem.text is Int) HtmlCompat.fromHtml(getString(faqItem.text), HtmlCompat.FROM_HTML_MODE_LEGACY) else faqItem.text as String
+                setTextColor(textColor)
+                setLinkTextColor(primaryColor)
+
+                movementMethod = LinkMovementMethod.getInstance()
+                removeUnderlines()
+            }
+
+            binding.faqHolder.addView(itemView)
         }
     }
 
     override fun onResume() {
         super.onResume()
-        setupToolbar(faq_toolbar, NavigationIcon.Arrow)
+        setupToolbar(findViewById(R.id.faq_toolbar), NavigationIcon.Arrow)
     }
 }

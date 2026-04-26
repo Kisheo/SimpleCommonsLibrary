@@ -1,19 +1,45 @@
 apply plugin: "com.android.library"
 apply plugin: "kotlin-android"
 apply plugin: "kotlin-kapt"
+apply plugin: "kotlin-parcelize"
+apply plugin: "maven-publish"
+
+// Set group and version so the artifact coordinates match the ones the consuming app expects
+group = 'com.github.Kisheo'
+version = 'b4c2de1'
 
 android {
-    compileSdkVersion propCompileSdkVersion
+    compileSdk = 36
 
     defaultConfig {
-        minSdkVersion propMinSdkVersion
-        targetSdkVersion propTargetSdkVersion
+        minSdk = propMinSdkVersion
+        targetSdk = propTargetSdkVersion
+    }
+
+    // Enable View Binding to replace kotlin synthetic view accessors
+    buildFeatures {
+        buildConfig = true
+        viewBinding = true
+    }
+
+    // Use Java 17 compatibility for compilation (stable target for Kotlin/Android)
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    // Add flavor dimension and product flavors to match the consuming app
+    flavorDimensions "licensing"
+    productFlavors {
+        proprietary {}
+        foss {}
+        prepaid {}
     }
 
     buildTypes {
         release {
             minifyEnabled false
-            proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+            proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
             consumerProguardFiles "proguard-rules.pro"
         }
     }
@@ -21,7 +47,15 @@ android {
     sourceSets {
         main.java.srcDirs += "src/main/kotlin"
     }
-    namespace 'com.dpsoftapps.commons'
+    namespace = 'com.dpsoftapps.commons'
+}
+
+// Ensure Kotlin compilation uses a known JVM target (set jvmTarget for Kotlin tasks)
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+    kotlinOptions {
+        jvmTarget = '17'
+        // keep API/IR defaults
+    }
 }
 
 dependencies {
@@ -29,8 +63,9 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation "androidx.constraintlayout:constraintlayout:2.2.1"
     implementation "androidx.documentfile:documentfile:1.1.0"
-    implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0"
+    implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.2.0"
     implementation "androidx.exifinterface:exifinterface:1.4.2"
+    // use a stable biometric artifact available on google()/mavenCentral()
     implementation "androidx.biometric:biometric:1.1.0"
     implementation "com.googlecode.ez-vcard:ez-vcard:0.12.2"
 
@@ -47,4 +82,31 @@ dependencies {
 
     api "androidx.room:room-runtime:2.8.1"
     kapt "androidx.room:room-compiler:2.8.1"
+}
+
+// Publishing configuration: create a Maven publication for the AAR and publish to mavenLocal when requested.
+// This allows the host app to resolve the dependency using mavenLocal() with the coordinates above.
+afterEvaluate {
+    publishing {
+        publications {
+            // Create a single publication for the release AAR (sufficient for local testing).
+            // This avoids using the deprecated android.libraryVariants API which can cause deprecation warnings
+            // and is brittle with newer AGP versions.
+            create("mavenAar", MavenPublication) {
+                // pick the release component if available, fallback to debug
+                if (components.findByName('release') != null) {
+                    from components.release
+                } else if (components.findByName('debug') != null) {
+                    from components.debug
+                }
+
+                groupId = project.group
+                artifactId = 'SimpleCommonsLibrary'
+                version = project.version
+            }
+        }
+        repositories {
+            mavenLocal()
+        }
+    }
 }

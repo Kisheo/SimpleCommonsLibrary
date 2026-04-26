@@ -3,15 +3,15 @@ package com.dpsoftapps.commons.dialogs
 import androidx.appcompat.app.AlertDialog
 import com.dpsoftapps.commons.R
 import com.dpsoftapps.commons.activities.BaseSimpleActivity
+import com.dpsoftapps.commons.databinding.DialogAddBlockedNumberBinding
 import com.dpsoftapps.commons.extensions.*
 import com.dpsoftapps.commons.models.BlockedNumber
-import kotlinx.android.synthetic.main.dialog_add_blocked_number.view.*
 
 class AddBlockedNumberDialog(val activity: BaseSimpleActivity, val originalNumber: BlockedNumber? = null, val callback: () -> Unit) {
     init {
-        val view = activity.layoutInflater.inflate(R.layout.dialog_add_blocked_number, null).apply {
+        val binding = DialogAddBlockedNumberBinding.inflate(activity.layoutInflater).apply {
             if (originalNumber != null) {
-                add_blocked_number_edittext.setText(originalNumber.number)
+                addBlockedNumberEdittext.setText(originalNumber.number)
             }
         }
 
@@ -19,10 +19,10 @@ class AddBlockedNumberDialog(val activity: BaseSimpleActivity, val originalNumbe
             .setPositiveButton(R.string.ok, null)
             .setNegativeButton(R.string.cancel, null)
             .apply {
-                activity.setupDialogStuff(view, this) { alertDialog ->
-                    alertDialog.showKeyboard(view.add_blocked_number_edittext)
+                activity.setupDialogStuff(binding.root, this) { alertDialog ->
+                    alertDialog.showKeyboard(binding.addBlockedNumberEdittext)
                     alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-                        var newBlockedNumber = view.add_blocked_number_edittext.value
+                        var newBlockedNumber = binding.addBlockedNumberEdittext.value
                         if (originalNumber != null && newBlockedNumber != originalNumber.number) {
                             activity.deleteBlockedNumber(originalNumber.number)
                         }

@@ -29,9 +29,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.biometric.BiometricPrompt
-import androidx.biometric.auth.AuthPromptCallback
-import androidx.biometric.auth.AuthPromptHost
-import androidx.biometric.auth.Class2BiometricAuthPrompt
+import androidx.core.content.ContextCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.documentfile.provider.DocumentFile
 import androidx.fragment.app.FragmentActivity
@@ -43,7 +41,6 @@ import com.dpsoftapps.commons.dialogs.WritePermissionDialog.Mode
 import com.dpsoftapps.commons.helpers.*
 import com.dpsoftapps.commons.models.*
 import com.dpsoftapps.commons.views.MyTextView
-import kotlinx.android.synthetic.main.dialog_title.view.*
 import java.io.*
 import java.util.*
 
@@ -56,7 +53,7 @@ fun Activity.appLaunched(appId: String) {
         checkAppIconColor()
     } else if (!baseConfig.wasOrangeIconChecked) {
         baseConfig.wasOrangeIconChecked = true
-        val primaryColor = resources.getColor(R.color.color_primary)
+        val primaryColor = androidx.core.content.res.ResourcesCompat.getColor(resources, R.color.color_primary, null)
         if (baseConfig.appIconColor != primaryColor) {
             getAppIconColors().forEachIndexed { index, color ->
                 toggleAppIconColor(appId, index, color, false)
@@ -105,7 +102,7 @@ fun Activity.showDonateOrUpgradeDialog() {
 
 fun Activity.isAppInstalledOnSDCard(): Boolean = try {
     val applicationInfo = packageManager.getPackageInfo(packageName, 0).applicationInfo
-    (applicationInfo.flags and ApplicationInfo.FLAG_EXTERNAL_STORAGE) == ApplicationInfo.FLAG_EXTERNAL_STORAGE
+    applicationInfo?.let { (it.flags and ApplicationInfo.FLAG_EXTERNAL_STORAGE) == ApplicationInfo.FLAG_EXTERNAL_STORAGE } ?: false
 } catch (e: Exception) {
     false
 }
@@ -1386,29 +1383,42 @@ fun Activity.showBiometricPrompt(
     successCallback: ((String, Int) -> Unit)? = null,
     failureCallback: (() -> Unit)? = null
 ) {
-    Class2BiometricAuthPrompt.Builder(getText(R.string.authenticate), getText(R.string.cancel))
-        .build()
-        .startAuthentication(
-            AuthPromptHost(this as FragmentActivity),
-            object : AuthPromptCallback() {
-                override fun onAuthenticationSucceeded(activity: FragmentActivity?, result: BiometricPrompt.AuthenticationResult) {
-                    successCallback?.invoke("", PROTECTION_FINGERPRINT)
-                }
-
-                override fun onAuthenticationError(activity: FragmentActivity?, errorCode: Int, errString: CharSequence) {
-                    val isCanceledByUser = errorCode == BiometricPrompt.ERROR_NEGATIVE_BUTTON || errorCode == BiometricPrompt.ERROR_USER_CANCELED
-                    if (!isCanceledByUser) {
-                        toast(errString.toString())
-                    }
-                    failureCallback?.invoke()
-                }
-
-                override fun onAuthenticationFailed(activity: FragmentActivity?) {
-                    toast(R.string.authentication_failed)
-                    failureCallback?.invoke()
-                }
+    // Use standard BiometricPrompt for compatibility
+    try {
+        val executor = ContextCompat.getMainExecutor(this)
+        val callback = object : BiometricPrompt.AuthenticationCallback() {
+            override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                super.onAuthenticationSucceeded(result)
+                successCallback?.invoke("", PROTECTION_FINGERPRINT)
             }
-        )
+
+            override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+                super.onAuthenticationError(errorCode, errString)
+                val isCanceledByUser = errorCode == BiometricPrompt.ERROR_NEGATIVE_BUTTON || errorCode == BiometricPrompt.ERROR_USER_CANCELED
+                if (!isCanceledByUser) {
+                    toast(errString.toString())
+                }
+                failureCallback?.invoke()
+            }
+
+            override fun onAuthenticationFailed() {
+                super.onAuthenticationFailed()
+                toast(R.string.authentication_failed)
+                failureCallback?.invoke()
+            }
+        }
+
+        val prompt = BiometricPrompt(this as FragmentActivity, executor, callback)
+        val promptInfo = BiometricPrompt.PromptInfo.Builder()
+            .setTitle(getString(R.string.authenticate))
+            .setNegativeButtonText(getString(R.string.cancel))
+            .build()
+
+        prompt.authenticate(promptInfo)
+    } catch (e: Exception) {
+        // Biometric unavailable or host not a FragmentActivity
+        failureCallback?.invoke()
+    }
 }
 
 fun Activity.handleHiddenFolderPasswordProtection(callback: () -> Unit) {
@@ -1528,15 +1538,14 @@ fun Activity.setupDialogStuff(
     } else {
         var title: TextView? = null
         if (titleId != 0 || titleText.isNotEmpty()) {
-            title = layoutInflater.inflate(R.layout.dialog_title, null) as TextView
-            title.dialog_title_textview.apply {
-                if (titleText.isNotEmpty()) {
-                    text = titleText
-                } else {
-                    setText(titleId)
-                }
-                setTextColor(textColor)
+            val titleBinding = com.dpsoftapps.commons.databinding.DialogTitleBinding.inflate(layoutInflater)
+            if (titleText.isNotEmpty()) {
+                titleBinding.dialogTitleTextview.text = titleText
+            } else {
+                titleBinding.dialogTitleTextview.setText(titleId)
             }
+            titleBinding.dialogTitleTextview.setTextColor(textColor)
+            title = titleBinding.root as TextView
         }
 
         // if we use the same primary and background color, use the text color for dialog confirmation buttons

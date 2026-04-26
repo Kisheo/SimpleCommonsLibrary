@@ -3,8 +3,8 @@ package com.dpsoftapps.commons.dialogs
 import androidx.appcompat.app.AlertDialog
 import com.dpsoftapps.commons.R
 import com.dpsoftapps.commons.activities.BaseSimpleActivity
+import com.dpsoftapps.commons.databinding.DialogExportSettingsBinding
 import com.dpsoftapps.commons.extensions.*
-import kotlinx.android.synthetic.main.dialog_export_settings.view.*
 
 class ExportSettingsDialog(
     val activity: BaseSimpleActivity, val defaultFilename: String, val hidePath: Boolean,
@@ -18,18 +18,17 @@ class ExportSettingsDialog(
             activity.internalStoragePath
         }
 
-        val view = activity.layoutInflater.inflate(R.layout.dialog_export_settings, null).apply {
-            export_settings_filename.setText(defaultFilename.removeSuffix(".txt"))
+        val binding = DialogExportSettingsBinding.inflate(activity.layoutInflater)
+        binding.exportSettingsFilename.setText(defaultFilename.removeSuffix(".txt"))
 
-            if (hidePath) {
-                export_settings_path_hint.beGone()
-            } else {
-                export_settings_path.setText(activity.humanizePath(folder))
-                export_settings_path.setOnClickListener {
-                    FilePickerDialog(activity, folder, false, showFAB = true) {
-                        export_settings_path.setText(activity.humanizePath(it))
-                        folder = it
-                    }
+        if (hidePath) {
+            binding.exportSettingsPathHint.beGone()
+        } else {
+            binding.exportSettingsPath.setText(activity.humanizePath(folder))
+            binding.exportSettingsPath.setOnClickListener {
+                FilePickerDialog(activity, folder, false, showFAB = true) {
+                    binding.exportSettingsPath.setText(activity.humanizePath(it))
+                    folder = it
                 }
             }
         }
@@ -38,9 +37,9 @@ class ExportSettingsDialog(
             .setPositiveButton(R.string.ok, null)
             .setNegativeButton(R.string.cancel, null)
             .apply {
-                activity.setupDialogStuff(view, this, R.string.export_settings) { alertDialog ->
+                activity.setupDialogStuff(binding.root, this, R.string.export_settings) { alertDialog ->
                     alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-                        var filename = view.export_settings_filename.value
+                        var filename = binding.exportSettingsFilename.value
                         if (filename.isEmpty()) {
                             activity.toast(R.string.filename_cannot_be_empty)
                             return@setOnClickListener

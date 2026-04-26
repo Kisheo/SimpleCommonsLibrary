@@ -7,19 +7,19 @@ buildscript {
         propTargetSdkVersion = propCompileSdkVersion
         propVersionCode = 1
         propVersionName = '5.34.26'
-        kotlin_version = '1.8.22'
+        kotlin_version = '2.1.20'
     }
 
     repositories {
         google()
         // include jcenter as read-only fallback for legacy artifacts the project depends on
-        jcenter()
+        // jcenter() // deprecated, kept commented; prefer mavenCentral()
         mavenCentral()
     }
 
     dependencies {
         classpath 'com.android.tools.build:gradle:8.12.3'
-        classpath 'com.github.dcendents:android-maven-gradle-plugin:2.1'
+        // Align Kotlin plugin to 2.1.20 to match newer library artifacts in the dependency graph
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
 
         // NOTE: Do not place your application dependencies here; they belong
@@ -29,8 +29,10 @@ buildscript {
 
 allprojects {
     repositories {
+        // prefer local maven first so published libraries can be resolved by consuming projects
+        mavenLocal()
         google()
-        jcenter()
+        // jcenter() // deprecated
         mavenCentral()
         maven { url 'https://jitpack.io' }
     }
