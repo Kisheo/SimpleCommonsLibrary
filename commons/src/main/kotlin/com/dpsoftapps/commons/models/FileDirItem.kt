@@ -35,9 +35,9 @@ open class FileDirItem(
             when {
                 sorting and SORT_BY_NAME != 0 -> {
                     result = if (sorting and SORT_USE_NUMERIC_VALUE != 0) {
-                        AlphanumericComparator().compare(name.normalizeString().toLowerCase(), other.name.normalizeString().toLowerCase())
+                        AlphanumericComparator().compare(name.normalizeString().lowercase(), other.name.normalizeString().lowercase())
                     } else {
-                        name.normalizeString().toLowerCase().compareTo(other.name.normalizeString().toLowerCase())
+                        name.normalizeString().lowercase().compareTo(other.name.normalizeString().lowercase())
                     }
                 }
                 sorting and SORT_BY_SIZE != 0 -> result = when {
@@ -53,7 +53,7 @@ open class FileDirItem(
                     }
                 }
                 else -> {
-                    result = getExtension().toLowerCase().compareTo(other.getExtension().toLowerCase())
+                    result = getExtension().lowercase().compareTo(other.getExtension().lowercase())
                 }
             }
 
@@ -69,7 +69,7 @@ open class FileDirItem(
     fun getBubbleText(context: Context, dateFormat: String? = null, timeFormat: String? = null) = when {
         sorting and SORT_BY_SIZE != 0 -> size.formatSize()
         sorting and SORT_BY_DATE_MODIFIED != 0 -> modified.formatDate(context, dateFormat, timeFormat)
-        sorting and SORT_BY_EXTENSION != 0 -> getExtension().toLowerCase()
+        sorting and SORT_BY_EXTENSION != 0 -> getExtension().lowercase()
         else -> name
     }
 
